@@ -1,0 +1,288 @@
+{
+	"info": {
+		"_postman_id": "22187043-748c-4a63-9614-50dbcfb2ae4d",
+		"name": "Proyecto TourFer",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "38361630"
+	},
+	"item": [
+		{
+			"name": "Get_tours",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{catalogo_url}}/tours",
+					"host": [
+						"{{catalogo_url}}"
+					],
+					"path": [
+						"tours"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Post_Usuarios",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{ \"nombre\": \"Manuel Fernandez\", \"email\": \"manuel@email.com\", \"password\": \"123\" }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{reservas_url}}/usuarios",
+					"host": [
+						"{{reservas_url}}"
+					],
+					"path": [
+						"usuarios"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get_Tours_ID",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{catalogo_url}}/tours/6",
+					"host": [
+						"{{catalogo_url}}"
+					],
+					"path": [
+						"tours",
+						"6"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Post_Guia_SinKey",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{ \"nombre\": \"Guía de Prueba\", \"email\": \"prueba@email.com\" }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{catalogo_url}}/guias",
+					"host": [
+						"{{catalogo_url}}"
+					],
+					"path": [
+						"guias"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Post_Guia_ConKey",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "X-API-Key",
+						"value": "{{api_key}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{ \"nombre\": \"Guía de Prueba\", \"email\": \"prueba@email.com\" } ",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{catalogo_url}}/guias",
+					"host": [
+						"{{catalogo_url}}"
+					],
+					"path": [
+						"guias"
+					],
+					"query": [
+						{
+							"key": "",
+							"value": "",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Post_Reservas",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"tour_id\": 6,\r\n    \"usuario_id\": 104,\r\n    \"cantidad_personas\": 2\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{reservas_url}}/reservas",
+					"host": [
+						"{{reservas_url}}"
+					],
+					"path": [
+						"reservas"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Post_Tours",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "X-API-Key",
+						"value": "{{api_key}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"nombre\": \"Tour de Avistamiento de Aves\",\r\n    \"destino\": \"Minca, Sierra Nevada\",\r\n    \"descripcion\": \"Una caminata matutina para descubrir las aves endémicas de la Sierra Nevada.\",\r\n    \"duracion_horas\": 4.0,\r\n    \"precio\": 130000.00,\r\n    \"cupos_disponibles\": 10,\r\n    \"guia_id\": 3\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{catalogo_url}}/tours",
+					"host": [
+						"{{catalogo_url}}"
+					],
+					"path": [
+						"tours"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "PUT_Tours_ID",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "X-API-Key",
+						"value": "{{api_key}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"nombre\": \"Tour de Avistamiento de Aves (Oferta!)\",\r\n    \"destino\": \"Minca, Sierra Nevada\",\r\n    \"descripcion\": \"Una caminata matutina para descubrir las aves endémicas de la Sierra Nevada. ¡Ahora con descuento!\",\r\n    \"duracion_horas\": 4.0,\r\n    \"precio\": 115000.00,\r\n    \"cupos_disponibles\": 8,\r\n    \"guia_id\": 3\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{catalogo_url}}/tours/6",
+					"host": [
+						"{{catalogo_url}}"
+					],
+					"path": [
+						"tours",
+						"6"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete_Tours_ID",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "X-API-Key",
+						"value": "{{api_key}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{catalogo_url}}/tours/7",
+					"host": [
+						"{{catalogo_url}}"
+					],
+					"path": [
+						"tours",
+						"7"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET_Tours_IDNoExistente",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{catalogo_url}}/tours/7",
+					"host": [
+						"{{catalogo_url}}"
+					],
+					"path": [
+						"tours",
+						"7"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get_Reserva_Usuario_ID",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{reservas_url}}/reservas/usuario/104",
+					"host": [
+						"{{reservas_url}}"
+					],
+					"path": [
+						"reservas",
+						"usuario",
+						"104"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

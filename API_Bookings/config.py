@@ -1,0 +1,27 @@
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+class Config:
+    """
+    Configuración para la API de Reservas.
+    """
+    MYSQL_HOST = os.getenv("MYSQL_HOST", "localhost")
+    MYSQL_USER = os.getenv("MYSQL_USER", "user_reservas")
+    MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "reservaspass456")
+    MYSQL_DB = os.getenv("MYSQL_DB", "reservas_db") # Apunta a su propia base de datos
+    MYSQL_CURSORCLASS = "DictCursor"
+
+    CATALOGO_API_URL = os.getenv("CATALOGO_API_URL", "http://127.0.0.1:5001")
+
+    CATALOGO_API_KEY = os.getenv("CATALOGO_API_KEY", "tourfer-catalogo-secret-key")
+
+    JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "tourfer12345")
+
+def get_catalogo_api_config():
+    """Función para obtener la configuración de la API de Catálogo."""
+    return {
+        "url": Config.CATALOGO_API_URL,
+        "key": Config.CATALOGO_API_KEY
+    }

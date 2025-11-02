@@ -1,0 +1,6 @@
+Flask
+Flask-MySQLdb
+python-dotenv
+requests
+Flask-JWT-Extended 
+Flask-Bcrypt
