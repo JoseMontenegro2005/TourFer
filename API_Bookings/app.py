@@ -144,21 +144,13 @@ def get_mis_reservas():
 @app.route('/admin/tours', methods=['POST'])
 @admin_required
 def admin_create_tour():
-    """
-    (Admin) Crea un nuevo tour.
-    Esta ruta valida el JWT del admin y luego reenvía la
-    petición a la catalogo_api usando la X-API-Key.
-    """
     data = request.get_json()
     
-    # 1. Preparar la llamada a la catalogo_api
     url = f"{catalogo_api_config['url']}/tours"
-    headers = {'X-API-Key': catalogo_api_config['key']} # La clave M2M
-    
-    # 2. Reenviar la petición
+    headers = {'X-API-Key': catalogo_api_config['key']}
+
     try:
         response = requests.post(url, json=data, headers=headers)
-        # 3. Devolver la misma respuesta que nos dio la catalogo_api
         return jsonify(response.json()), response.status_code
     except requests.exceptions.RequestException as e:
         return jsonify({"error": f"Error al comunicar con API Catálogo: {e}"}), 503
@@ -166,9 +158,6 @@ def admin_create_tour():
 @app.route('/admin/tours/<int:id>', methods=['PUT'])
 @admin_required
 def admin_update_tour(id):
-    """
-    (Admin) Actualiza un tour existente.
-    """
     data = request.get_json()
     
     url = f"{catalogo_api_config['url']}/tours/{id}"
@@ -183,9 +172,6 @@ def admin_update_tour(id):
 @app.route('/admin/tours/<int:id>', methods=['DELETE'])
 @admin_required
 def admin_delete_tour(id):
-    """
-    (Admin) Elimina un tour existente.
-    """
     url = f"{catalogo_api_config['url']}/tours/{id}"
     headers = {'X-API-Key': catalogo_api_config['key']}
     
@@ -198,25 +184,16 @@ def admin_delete_tour(id):
 @app.route('/admin/guias', methods=['POST'])
 @admin_required
 def admin_create_guia():
-    """
-    (Admin) Crea un nuevo tour.
-    Esta ruta valida el JWT del admin y luego reenvía la
-    petición a la catalogo_api usando la X-API-Key.
-    """
     data = request.get_json()
     
-    # 1. Preparar la llamada a la catalogo_api
     url = f"{catalogo_api_config['url']}/guias"
-    headers = {'X-API-Key': catalogo_api_config['key']} # La clave M2M
-    
-    # 2. Reenviar la petición
+    headers = {'X-API-Key': catalogo_api_config['key']} 
+
     try:
         response = requests.post(url, json=data, headers=headers)
-        # 3. Devolver la misma respuesta que nos dio la catalogo_api
         return jsonify(response.json()), response.status_code
     except requests.exceptions.RequestException as e:
         return jsonify({"error": f"Error al comunicar con API Catálogo: {e}"}), 503
 
-# --- ARRANQUE DE LA APP ---
 if __name__ == '__main__':
     app.run(debug=True, port=5002)
