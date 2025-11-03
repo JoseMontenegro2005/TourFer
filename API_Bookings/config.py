@@ -10,7 +10,7 @@ class Config:
     MYSQL_HOST = os.getenv("MYSQL_HOST", "localhost")
     MYSQL_USER = os.getenv("MYSQL_USER", "user_reservas")
     MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "reservaspass456")
-    MYSQL_DB = os.getenv("MYSQL_DB", "reservas_db") # Apunta a su propia base de datos
+    MYSQL_DB = os.getenv("MYSQL_DB", "reservas_db") 
     MYSQL_CURSORCLASS = "DictCursor"
 
     CATALOGO_API_URL = os.getenv("CATALOGO_API_URL", "http://127.0.0.1:5001")

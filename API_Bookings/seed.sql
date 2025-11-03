@@ -3,7 +3,6 @@ DROP DATABASE IF EXISTS reservas_db;
 CREATE DATABASE reservas_db;
 USE reservas_db;
 
--- NUEVA TABLA: Define los roles de la aplicación
 CREATE TABLE roles (
     id INT PRIMARY KEY,
     nombre VARCHAR(50) NOT NULL
@@ -13,7 +12,6 @@ INSERT INTO roles (id, nombre) VALUES
 (1, 'Admin'),
 (2, 'Cliente');
 
--- TABLA MODIFICADA: Ahora incluye una columna 'rol_id'
 CREATE TABLE usuarios (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
@@ -21,14 +19,11 @@ CREATE TABLE usuarios (
     password VARCHAR(255) NOT NULL,
     fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     
-    -- NUEVA COLUMNA: Por defecto es 2 (Cliente)
     rol_id INT NOT NULL DEFAULT 2, 
     
-    -- NUEVA LLAVE FORÁNEA: Conecta usuarios con roles
     FOREIGN KEY (rol_id) REFERENCES roles(id)
 );
 
--- Tabla para almacenar las reservas (sin cambios)
 CREATE TABLE reservas (
     id INT AUTO_INCREMENT PRIMARY KEY,
     tour_id INT NOT NULL, 
