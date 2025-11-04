@@ -1,12 +1,9 @@
 from flask_mysqldb import MySQL
 
-# Se crea una instancia de MySQL que se usará en toda la aplicación
 mysql = MySQL()
 
 def init_mysql(app, cfg):
-    """
-    Inicializa la extensión MySQL con la configuración de la app.
-    """
+
     app.config['MYSQL_HOST'] = cfg.MYSQL_HOST
     app.config['MYSQL_USER'] = cfg.MYSQL_USER
     app.config['MYSQL_PASSWORD'] = cfg.MYSQL_PASSWORD

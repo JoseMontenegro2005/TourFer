@@ -20,7 +20,6 @@ def require_api_key(f):
 
 @app.route('/tours', methods=['GET'])
 def get_all_tours():
-    """Endpoint público para obtener todos los tours."""
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM tours")
     tours = cur.fetchall()
@@ -29,9 +28,7 @@ def get_all_tours():
 
 @app.route('/tours/<int:id>', methods=['GET'])
 def get_tour_by_id(id):
-    """
-    Endpoint público para obtener un tour por su ID.
-    """
+    
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM tours WHERE id = %s", (id,))
     tour = cur.fetchone()
@@ -43,7 +40,6 @@ def get_tour_by_id(id):
 @app.route('/tours', methods=['POST'])
 @require_api_key
 def create_tour():
-    """Endpoint protegido para crear un nuevo tour."""
     data = request.get_json()
     nombre = data['nombre']
     destino = data['destino']
@@ -65,7 +61,6 @@ def create_tour():
 @app.route('/tours/<int:id>', methods=['PUT'])
 @require_api_key
 def update_tour(id):
-    """Endpoint protegido para actualizar un tour completamente."""
     data = request.get_json()
     nombre = data['nombre']
     destino = data['destino']
@@ -98,7 +93,6 @@ def update_tour(id):
 @app.route('/tours/<int:id>', methods=['DELETE'])
 @require_api_key
 def delete_tour(id):
-    """Endpoint protegido para eliminar un tour."""
     cur = mysql.connection.cursor()
     cur.execute("DELETE FROM tours WHERE id = %s", (id,))
     mysql.connection.commit()
@@ -112,9 +106,7 @@ def delete_tour(id):
 @app.route('/tours/<int:id>/cupos', methods=['PATCH'])
 @require_api_key
 def update_tour_cupos(id):
-    """
-    Endpoint protegido para actualizar los cupos de un tour.
-    """
+
     data = request.get_json()
     if 'cantidad' not in data or 'accion' not in data:
         return jsonify({"error": "Faltan los campos 'cantidad' y 'accion'"}), 400
@@ -152,7 +144,6 @@ def update_tour_cupos(id):
 
 @app.route('/guias', methods=['GET'])
 def get_all_guias():
-    """Endpoint público para obtener todos los guías."""
     cur = mysql.connection.cursor()
     cur.execute("SELECT id, nombre, email, biografia FROM guias")
     guias = cur.fetchall()
@@ -162,7 +153,6 @@ def get_all_guias():
 @app.route('/guias', methods=['POST'])
 @require_api_key
 def create_guia():
-    """Endpoint protegido para crear un nuevo guía."""
     data = request.get_json()
     nombre = data['nombre']
     email = data['email']
