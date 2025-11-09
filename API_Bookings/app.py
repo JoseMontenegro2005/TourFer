@@ -5,8 +5,10 @@ from db import init_mysql, mysql
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity, get_jwt
 from functools import wraps
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 app.config.from_object(Config)
 init_mysql(app, Config)
 catalogo_api_config = get_catalogo_api_config()
@@ -194,6 +196,37 @@ def admin_create_guia():
         return jsonify(response.json()), response.status_code
     except requests.exceptions.RequestException as e:
         return jsonify({"error": f"Error al comunicar con API Catálogo: {e}"}), 503
+
+@app.route('/public/tours', methods=['GET'])
+def public_get_all_tours():
+    """Proxy público para ver todos los tours."""
+    url = f"{catalogo_api_config['url']}/tours"
+    try:
+        response = requests.get(url)
+        return jsonify(response.json()), response.status_code
+    except requests.exceptions.RequestException as e:
+        return jsonify({"error": f"Error al comunicar con API Catálogo: {e}"}), 503
+
+@app.route('/public/tours/<int:id>', methods=['GET'])
+def public_get_tour_by_id(id):
+    """Proxy público para ver un tour."""
+    url = f"{catalogo_api_config['url']}/tours/{id}"
+    try:
+        response = requests.get(url)
+        return jsonify(response.json()), response.status_code
+    except requests.exceptions.RequestException as e:
+        return jsonify({"error": f"Error al comunicar con API Catálogo: {e}"}), 503
+
+@app.route('/public/guias', methods=['GET'])
+def public_get_all_guias():
+    """Proxy público para ver todos los guías."""
+    url = f"{catalogo_api_config['url']}/guias"
+    try:
+        response = requests.get(url)
+        return jsonify(response.json()), response.status_code
+    except requests.exceptions.RequestException as e:
+        return jsonify({"error": f"Error al comunicar con API Catálogo: {e}"}), 503
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=5002)
