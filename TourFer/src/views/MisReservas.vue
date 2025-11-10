@@ -94,14 +94,13 @@ h1 {
   font-weight: 800;
 }
 
-.mis-reservas-container > p { /* Target el <p> directo */
+.mis-reservas-container > p {
   color: var(--text-light);
   text-align: center;
   margin-bottom: 2.5rem;
   font-size: 1.25rem;
 }
 
-/* --- SOLUCIÓN A "CARGA HORIZONTAL" --- */
 .reservas-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
