@@ -1,8 +1,6 @@
 import { defineStore } from 'pinia';
 import axios from 'axios';
-// ¡ELIMINADO! Ya no hay 'import router from ...'
 
-// (Función auxiliar para decodificar)
 function decodeJwt(token) {
   try {
     const base64Url = token.split('.')[1];
@@ -30,11 +28,10 @@ export const useAuthStore = defineStore('auth', {
   }),
   getters: {
     isAuthenticated: (state) => !!state.token,
-    isAdmin: (state) => state.userRole === '1', // Compara con string
+    isAdmin: (state) => state.userRole === '1',
   },
 
   actions: {
-    // CAMBIO CLAVE: La función ahora es 'async'
     async login(email, password) {
       this.error = null;
       try {
@@ -45,21 +42,18 @@ export const useAuthStore = defineStore('auth', {
 
         const token = response.data.access_token;
         const payload = decodeJwt(token);
-        const rol = payload.rol_id.toString(); // Convierte a string
+        const rol = payload.rol_id.toString(); 
 
         this.token = token;
         this.userRole = rol;
         localStorage.setItem('token', token);
         localStorage.setItem('userRole', rol);
-        
-        // CAMBIO CLAVE:
-        // Ya no hay 'router.push'. Devolvemos 'true' para avisar que fue exitoso.
+
         return true; 
         
       } catch (e) {
         this.error = 'Error: Email o contraseña incorrectos.';
         console.error(e);
-        // Devolvemos 'false' si falla.
         return false;
       }
     },
@@ -70,8 +64,6 @@ export const useAuthStore = defineStore('auth', {
       this.error = null;
       localStorage.removeItem('token');
       localStorage.removeItem('userRole');
-      // CAMBIO CLAVE:
-      // Ya no hay 'router.push'.
     },
 
     getAuthHeaders() {

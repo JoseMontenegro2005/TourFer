@@ -1,10 +1,4 @@
-/*
-=======================================================
- ARCHIVO main.css - LIMPIO Y CORREGIDO
-=======================================================
-*/
 
-/* --- 1. Definición de la Fuente y Colores (CSS Variables) --- */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
 :root {
@@ -34,7 +28,6 @@
   --shadow-large: 0 10px 30px rgba(0, 0, 0, 0.1);
 }
 
-/* --- 2. Reseteo Básico --- */
 body, html {
   margin: 0;
   padding: 0;
@@ -48,22 +41,15 @@ body, html {
   box-sizing: inherit;
 }
 
-/* =======================================================
- ¡SOLUCIÓN PARA EL NAVBAR SUPERPUESTO!
- Esta regla ahora vivirá aquí, sin conflictos de media query.
-=======================================================
-*/
 main.main-content {
   padding: 2rem;
   background-color: var(--bg-main);
   min-height: calc(100vh - 80px);
   
-  /* Esto añade un relleno superior igual a la altura del navbar (80px) */
   padding-top: 80px; 
 }
 
 
-/* --- 3. Clases de Botones Globales --- */
 .btn {
   padding: 12px 20px;
   border: none;
@@ -106,7 +92,6 @@ main.main-content {
   box-shadow: var(--shadow-small);
 }
 
-/* --- 4. Clases de Formularios Globales --- */
 .form-container {
   max-width: 500px;
   margin: 0 auto;
@@ -148,7 +133,6 @@ main.main-content {
   box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
 }
 
-/* --- 5. Estados Globales --- */
 .loading-state, .empty-state {
   text-align: center;
   font-size: 1.2rem;

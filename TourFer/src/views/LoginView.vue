@@ -53,32 +53,26 @@ export default {
     return {
       email: '',
       password: '',
-      // Inicializa el store para usarlo en el template y script
       authStore: useAuthStore(),
     };
   },
   
   methods: {
     async handleLogin() {
-      // Limpia errores antiguos
       this.authStore.error = null;
       
-      // Llama a la acción 'login' del store y espera la respuesta
       const loginExitoso = await this.authStore.login(this.email, this.password);
       
       if (loginExitoso) {
-        // Si el login es exitoso, la VISTA decide a dónde navegar
         if (this.authStore.isAdmin) {
-          this.$router.push('/admin'); // Redirige al panel de admin
+          this.$router.push('/admin'); 
         } else {
-          this.$router.push('/'); // Redirige al inicio (lista de tours)
+          this.$router.push('/');
         }
       }
-      // Si fue 'false', no hace nada y el v-if mostrará el error del store.
     }
   },
   
-  // Limpia el error si el usuario navega fuera de esta vista
   unmounted() {
     this.authStore.error = null;
   }
@@ -86,7 +80,6 @@ export default {
 </script>
 
 <style scoped>
-/* Estilos para centrar la tarjeta */
 .form-page-container {
   display: flex;
   justify-content: center;
@@ -94,9 +87,6 @@ export default {
   padding: 2rem 0;
 }
 
-/* Usa la clase .form-container global y le añade estilos
-  específicos para login/register 
-*/
 .form-card {
   width: 90%;
   max-width: 420px;

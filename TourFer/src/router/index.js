@@ -1,13 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '@/stores/authStore';
-
-// --- IMPORTACIÓN DE VISTAS ---
-// Asegúrate de que todas tus vistas estén importadas aquí
 import ClienteTours from '@/views/ClienteTours.vue';
 import LoginView from '@/views/LoginView.vue';
 import AdminPanel from '@/views/AdminPanel.vue';
-import RegisterView from '@/views/RegisterView.vue'; // <-- ESTA LÍNEA ES LA CLAVE
-// (Solo 'mis-reservas' queda pendiente)
+import RegisterView from '@/views/RegisterView.vue'; 
 import MisReservasView from '@/views/MisReservas.vue'; 
 
 const router = createRouter({
@@ -24,9 +20,9 @@ const router = createRouter({
       component: LoginView,
     },
     {
-      path: '/register', // <-- RUTA DESCOMENTADA
+      path: '/register', 
       name: 'register',
-      component: RegisterView, // <-- AHORA FUNCIONA PORQUE FUE IMPORTADO
+      component: RegisterView,
     },
     {
       path: '/admin',
@@ -43,7 +39,6 @@ const router = createRouter({
   ],
 });
 
-// --- GUARDIA DE SEGURIDAD DEL ROUTER (Sin cambios) ---
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore();
 
@@ -51,7 +46,7 @@ router.beforeEach((to, from, next) => {
     if (authStore.isAuthenticated && authStore.isAdmin) {
       next(); 
     } else {
-      next('/login'); 
+      next('/'); 
     }
   } 
   else if (to.meta.requiresAuth) {

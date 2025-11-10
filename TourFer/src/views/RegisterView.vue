@@ -74,21 +74,17 @@ export default {
     async handleRegister() {
       this.error = null;
       try {
-        // 1. Intenta registrar al usuario
         await axios.post('http://127.0.0.1:5002/register', {
           nombre: this.nombre,
           email: this.email,
           password: this.password,
         });
         
-        // 2. Si el registro es exitoso, intenta hacer login automáticamente
         const loginExitoso = await this.authStore.login(this.email, this.password);
         
         if (loginExitoso) {
-          // 3. Si el login automático es exitoso, ESTA VISTA redirige
-          this.$router.push('/'); // Redirige al inicio (lista de tours)
+          this.$router.push('/'); 
         } else {
-          // Si el login falla (raro), redirige a la página de login
           this.$router.push('/login');
         }
         
@@ -102,9 +98,6 @@ export default {
 </script>
 
 <style scoped>
-/* Estilos idénticos a LoginView.vue para mantener consistencia.
-  En un proyecto más grande, esto sería un componente reutilizable.
-*/
 .form-page-container {
   display: flex;
   justify-content: center;

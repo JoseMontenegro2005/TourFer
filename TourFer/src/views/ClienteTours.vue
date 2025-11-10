@@ -17,7 +17,7 @@
       <div v-for="tour in tours" :key="tour.id" class="tour-card">
         
         <div class="tour-image">
-          <img :src="tour.imagen_url || 'https://placehold.co/400x225/3498db/ffffff?text=TourFer'" alt="Imagen del tour">
+          <img :src="tour.imagen_url" alt="Imagen del tour">
           <span class="tour-price">${{ parseFloat(tour.precio).toLocaleString('es-CO') }}</span>
         </div>
         
@@ -41,7 +41,6 @@
 <script>
 import axios from 'axios';
 import { useAuthStore } from '@/stores/authStore';
-// import { useRouter } from 'vue-router'; // No es necesario en Options API
 
 export default {
   name: 'ClienteTours',
@@ -52,7 +51,6 @@ export default {
       isLoading: true,
       error: null,
       authStore: useAuthStore(),
-      // this.$router está disponible automáticamente
     };
   },
 
@@ -60,7 +58,6 @@ export default {
     async fetchTours() {
       this.isLoading = true;
       try {
-        // Llama a la ruta pública del proxy en la API de Reservas
         const response = await axios.get('http://127.0.0.1:5002/public/tours');
         this.tours = response.data;
       } catch (e) {
@@ -73,19 +70,13 @@ export default {
     
     handleComprar(tour) {
       if (!this.authStore.isAuthenticated) {
-        // Si no está logueado, lo envía al login
-        this.$router.push('/login'); // Se usa 'this.$router'
+        this.$router.push('/login');
       } else {
-        // Lógica para reservar (ej. mostrar un modal o ir a una página de detalle)
-        // Por ahora, solo un alert:
         alert(`¡Iniciando reserva para: ${tour.nombre}!`);
-        // Aquí llamarías a la acción del store que aún no hemos creado:
-        // this.authStore.hacerReserva(tour.id, 1);
       }
     }
   },
 
-  // Carga los tours tan pronto como el componente se monta
   mounted() {
     this.fetchTours();
   }
@@ -114,24 +105,19 @@ export default {
   margin-top: 0;
 }
 
-/* --- SOLUCIÓN A "CARGA HORIZONTAL" --- */
 .tours-grid {
   display: grid;
-  /* Crea columnas de 350px, pero permite que se encojan/crezcan.
-    'auto-fill' crea tantas columnas como quepan.
-  */
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 2rem; /* Espacio entre las tarjetas */
+  gap: 2rem; 
 }
 
-/* --- NUEVO DISEÑO DE TARJETA --- */
 .tour-card {
   background-color: var(--bg-white);
   border-radius: var(--border-radius-large);
   box-shadow: var(--shadow-medium);
   overflow: hidden;
   display: flex;
-  flex-direction: column; /* Organiza el contenido verticalmente */
+  flex-direction: column;
   transition: all 0.3s ease;
 }
 
@@ -143,14 +129,13 @@ export default {
 .tour-image {
   position: relative;
   width: 100%;
-  /* Mantiene una proporción 16:9 para todas las imágenes */
   aspect-ratio: 16 / 9;
 }
 
 .tour-image img {
   width: 100%;
   height: 100%;
-  object-fit: cover; /* Asegura que la imagen cubra el área sin distorsionarse */
+  object-fit: cover; 
 }
 
 .tour-price {
@@ -168,7 +153,7 @@ export default {
 
 .tour-content {
   padding: 1.5rem;
-  flex-grow: 1; /* Hace que esta sección crezca para empujar el footer hacia abajo */
+  flex-grow: 1; 
 }
 
 .tour-destination {

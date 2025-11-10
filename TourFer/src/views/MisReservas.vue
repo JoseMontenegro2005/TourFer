@@ -44,45 +44,34 @@ import { useAuthStore } from '@/stores/authStore';
 export default {
   name: 'MisReservas',
   
-  // Usamos 'setup' (Composition API) para una lógica más limpia
   setup() {
-    // Inicializa el store para obtener el token
     const authStore = useAuthStore();
     
-    // Define el estado reactivo
     const reservas = ref([]);
     const isLoading = ref(true);
     const error = ref(null);
 
-    // Función para cargar las reservas
     const cargarReservas = async () => {
       try {
-        // 1. Obtiene las cabeceras de autenticación (el Bearer Token)
         const config = authStore.getAuthHeaders();
         if (!config.headers) {
           throw new Error('Usuario no autenticado.');
         }
 
-        // 2. Llama a la ruta protegida /mis-reservas
         const response = await axios.get('http://127.0.0.1:5002/mis-reservas', config);
         
-        // 3. Guarda los datos en el estado
         reservas.value = response.data;
 
       } catch (e) {
         console.error(e);
         error.value = 'Error al cargar tus reservas. Por favor, intenta iniciar sesión de nuevo.';
       } finally {
-        // 4. Quita el mensaje de "Cargando..."
         isLoading.value = false;
       }
     };
 
-    // 'onMounted' es un hook de Vue que se ejecuta
-    // automáticamente cuando el componente se carga
     onMounted(cargarReservas);
 
-    // Expone las variables al template
     return {
       reservas,
       isLoading,

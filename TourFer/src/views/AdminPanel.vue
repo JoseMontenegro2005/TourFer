@@ -102,7 +102,7 @@ const emptyForm = () => ({
   cupos_disponibles: 10,
   duracion_horas: 1,
   guia_id: 1,
-  imagen_url: '' // El backend no la usa pero es bueno tenerla
+  imagen_url: '' 
 });
 
 export default {
@@ -121,7 +121,6 @@ export default {
   },
   
   methods: {
-    // --- Lógica de Carga ---
     async fetchTours() {
       this.isLoading = true;
       this.loadError = null;
@@ -136,7 +135,6 @@ export default {
       }
     },
 
-    // --- Lógica del Formulario ---
     async handleSubmitTour() {
       this.formError = null;
       if (!this.authStore.isAdmin) {
@@ -148,17 +146,15 @@ export default {
         const config = this.authStore.getAuthHeaders();
         
         if (this.editMode) {
-          // --- Lógica de Actualización (PUT) ---
           const url = `${API_URL}/admin/tours/${this.editTourId}`;
           await axios.put(url, this.tourForm, config);
         } else {
-          // --- Lógica de Creación (POST) ---
           const url = `${API_URL}/admin/tours`;
           await axios.post(url, this.tourForm, config);
         }
         
         this.resetForm();
-        await this.fetchTours(); // Recarga la lista
+        await this.fetchTours(); 
         
       } catch (e) {
         console.error(e);
@@ -169,9 +165,8 @@ export default {
     startEdit(tour) {
       this.editMode = true;
       this.editTourId = tour.id;
-      // Clona el objeto para evitar mutaciones no deseadas
       this.tourForm = { ...tour };
-      window.scrollTo(0, 0); // Sube al inicio de la página
+      window.scrollTo(0, 0); 
     },
 
     resetForm() {
@@ -194,7 +189,7 @@ export default {
         const config = this.authStore.getAuthHeaders();
         const url = `${API_URL}/admin/tours/${id}`;
         await axios.delete(url, config);
-        await this.fetchTours(); // Recarga la lista
+        await this.fetchTours(); 
       } catch (e) {
         console.error(e);
         alert('Error al eliminar el tour.');
@@ -249,13 +244,11 @@ export default {
   display: inline-block;
 }
 
-/* --- Estilos del Formulario --- */
 .form-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 1.5rem;
 }
-/* Hace que un item ocupe X columnas */
 .span-2 { grid-column: span 2; }
 .span-4 { grid-column: span 4; }
 
@@ -268,15 +261,8 @@ export default {
   margin-top: 1rem;
 }
 
-/* --- Estilos de la Tabla --- */
 .table-container {
   width: 100%;
-  
-  /* ======================================================= */
-  /* ¡SOLUCIÓN 1: TABLA SE SALE DE PANTALLA! */
-  /* Esto añade una barra de scroll horizontal SÓLO a la tabla */
-  /* si es más ancha que el contenedor. */
-  /* ======================================================= */
   overflow-x: auto;
 }
 
@@ -290,20 +276,14 @@ export default {
 .admin-table th, .admin-table td {
   padding: 12px 15px;
   border-bottom: 1px solid var(--border-color);
-  white-space: nowrap; /* Evita que el texto se parta en la tabla */
-  
-  /* ======================================================= */
-  /* ¡SOLUCIÓN 2: TEXTO BLANCO! */
-  /* Esto fuerza a que el texto de la tabla sea del color oscuro */
-  /* definido en tus variables globales (ver App.vue). */
-  /* ======================================================= */
+  white-space: nowrap; 
   color: var(--text-color); 
 }
 
 .admin-table th {
   background-color: #ecf0f1;
   font-weight: 700;
-  color: var(--text-color); /* Doble seguro para cabeceras */
+  color: var(--text-color); 
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -331,12 +311,10 @@ export default {
   font-weight: 500;
 }
 
-/* Media query para pantallas pequeñas */
 @media (max-width: 768px) {
   .form-grid {
-    grid-template-columns: 1fr; /* Una columna en móvil */
+    grid-template-columns: 1fr;
   }
-  /* Resetea el 'span' en móvil */
   .span-2, .span-4 {
     grid-column: span 1;
   }
