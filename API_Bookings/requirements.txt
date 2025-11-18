@@ -5,3 +5,4 @@ requests
 Flask-JWT-Extended 
 Flask-Bcrypt
 Flask-cors
+gunicorn
