@@ -12,6 +12,9 @@ class Config:
     MYSQL_CURSORCLASS = "DictCursor"
 
     API_KEY = os.getenv("API_KEY", "tourfer-catalogo-secret-key")
-
+# ...
+    MYSQL_SSL_DISABLED = False
+    
+    MYSQL_SSL = {'ssl': {'ca': '/etc/ssl/cert.pem'}} 
 def get_api_key():
     return Config.API_KEY

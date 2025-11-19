@@ -5,11 +5,13 @@ load_dotenv()
 
 class Config:
     MYSQL_HOST = os.getenv("MYSQL_HOST", "localhost")
+    MYSQL_PORT = int(os.getenv("MYSQL_PORT", 3306))
     MYSQL_USER = os.getenv("MYSQL_USER", "user_reservas")
     MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "reservaspass456")
     MYSQL_DB = os.getenv("MYSQL_DB", "reservas_db") 
     MYSQL_CURSORCLASS = "DictCursor"
-
+    MYSQL_SSL_DISABLED = False
+    MYSQL_SSL = {'ssl': {'ca': '/etc/ssl/cert.pem'}} 
     CATALOGO_API_URL = os.getenv("CATALOGO_API_URL", "http://127.0.0.1:5001")
 
     CATALOGO_API_KEY = os.getenv("CATALOGO_API_KEY", "tourfer-catalogo-secret-key")
