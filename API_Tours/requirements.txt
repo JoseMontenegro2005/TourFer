@@ -1,4 +1,4 @@
 Flask
-Flask-MySQLdb
+psycopg2-binary
 python-dotenv
 gunicorn
