@@ -13,7 +13,7 @@ INSERT INTO roles (id, nombre) VALUES
 (2, 'Cliente');
 
 CREATE TABLE usuarios (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
@@ -25,7 +25,7 @@ CREATE TABLE usuarios (
 );
 
 CREATE TABLE reservas (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     tour_id INT NOT NULL, 
     usuario_id INT,
     fecha_reserva TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
