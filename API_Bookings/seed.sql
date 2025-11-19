@@ -31,7 +31,7 @@ CREATE TABLE reservas (
     fecha_reserva TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     cantidad_personas INT NOT NULL,
     costo_total DECIMAL(10, 2) NOT NULL,
-    estado ENUM('Pendiente', 'Confirmada', 'Cancelada') NOT NULL DEFAULT 'Pendiente',
+    estado VARCHAR(20) NOT NULL DEFAULT 'Pendiente' CHECK (estado IN ('Pendiente', 'Confirmada', 'Cancelada')),
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
 );
 
