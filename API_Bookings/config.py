@@ -10,8 +10,8 @@ class Config:
     MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD")
     MYSQL_DB = os.getenv("MYSQL_DB") 
     MYSQL_CURSORCLASS = "DictCursor"
-
-    MYSQL_SSL_DISABLED = True
+    
+    MYSQL_SSL_DISABLED = False
     MYSQL_SSL = {'ssl': {'ca': '/etc/ssl/cert.pem'}} 
     CATALOGO_API_URL = os.getenv("CATALOGO_API_URL", "http://127.0.0.1:5001")
 
