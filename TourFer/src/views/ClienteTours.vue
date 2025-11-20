@@ -14,7 +14,7 @@
       <p>{{ error }}</p>
     </div>
 
-    <!-- GRID DE TOURS (Tu estructura original) -->
+    <!-- GRID DE TOURS -->
     <div v-if="tours.length > 0" class="tours-grid">
       <div v-for="tour in tours" :key="tour.id" class="tour-card">
         
@@ -28,7 +28,6 @@
           <h3>{{ tour.nombre }}</h3>
           <p>{{ tour.descripcion ? tour.descripcion.substring(0, 100) + '...' : 'Sin descripción' }}</p>
           
-          <!-- Información extra útil para el usuario -->
           <div style="margin-top: 1rem; display: flex; justify-content: space-between; font-size: 0.85rem; color: #666;">
              <span>🕒 {{ tour.duracion_horas }} Horas</span>
              <span>👥 {{ tour.cupos_disponibles }} Cupos</span>
@@ -44,7 +43,7 @@
     </div>
 
     <!-- ========================================= -->
-    <!-- MODAL DE RESERVA (NUEVO) -->
+    <!-- MODAL DE RESERVA -->
     <!-- ========================================= -->
     <div v-if="showModal" class="modal-overlay" @click.self="cerrarModal">
       <div class="modal-content">
@@ -56,12 +55,14 @@
         <form @submit.prevent="enviarReserva" class="reserva-form">
           <div class="form-group">
             <label>Fecha de Reserva:</label>
+            <!-- Se aplica minDate aquí para bloquear fechas anteriores -->
             <input 
               type="date" 
               v-model="formReserva.fecha" 
               required 
               :min="minDate"
             >
+            <small style="color: #666; font-size: 0.8em;">Solo reservas con 15 días de anticipación</small>
           </div>
 
           <div class="form-group">
@@ -110,7 +111,6 @@ export default {
       error: null,
       authStore: useAuthStore(),
       
-      // Estados del Modal
       showModal: false,
       selectedTour: null,
       isSubmitting: false,
@@ -122,8 +122,13 @@ export default {
   },
 
   computed: {
+    // LÓGICA MODIFICADA PARA REGLA DE 15 DÍAS
     minDate() {
-      return new Date().toISOString().split('T')[0];
+      const fechaMinima = new Date();
+      // Sumamos 15 días a la fecha actual
+      fechaMinima.setDate(fechaMinima.getDate() + 15);
+      // Formateamos a YYYY-MM-DD para el input HTML
+      return fechaMinima.toISOString().split('T')[0];
     }
   },
 
@@ -166,14 +171,13 @@ export default {
           personas: this.formReserva.personas
         };
         
-        // Ajusta URL si es necesario
-        const url = 'https://tourfer-reservas.onrender.com/reservar';
+        const url = 'https://tourfer-reservas.onrender.com/reservas';
         
         await axios.post(url, datosReserva, this.authStore.getAuthHeaders());
 
         alert(`¡Reserva exitosa! Te hemos enviado un correo de confirmación.`);
         this.cerrarModal();
-        this.fetchTours(); // Actualizar cupos visualmente
+        this.fetchTours();
 
       } catch (error) {
         console.error(error);
@@ -192,12 +196,11 @@ export default {
 </script>
 
 <style scoped>
-/* --- TUS ESTILOS ORIGINALES (PRESERVADOS) --- */
-
+/* --- TUS ESTILOS ORIGINALES SE MANTIENEN --- */
 .tours-container {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 2rem; /* Agregué padding para que no pegue a los bordes en móvil */
+  padding: 2rem;
 }
 
 .tours-header {
@@ -207,7 +210,7 @@ export default {
 .tours-header h1 {
   font-size: 2.5rem;
   font-weight: 800;
-  color: var(--text-color, #333); /* Fallback color */
+  color: var(--text-color, #333);
   margin-bottom: 0.5rem;
 }
 .tours-header p {
@@ -230,7 +233,7 @@ export default {
   display: flex;
   flex-direction: column;
   transition: all 0.3s ease;
-  border: 1px solid #eee; /* Borde sutil si no carga la sombra */
+  border: 1px solid #eee;
 }
 
 .tour-card:hover {
@@ -310,32 +313,31 @@ export default {
   cursor: pointer;
   font-weight: 600;
   transition: background-color 0.3s;
-  width: 100%; /* Botón ancho completo en la tarjeta se ve mejor */
+  width: 100%;
 }
 .btn-comprar:hover {
   background-color: var(--primary-dark, #1a252f);
 }
 
-/* --- ESTILOS DEL MODAL (NUEVOS) --- */
-
+/* ESTILOS DEL MODAL */
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.6); /* Fondo un poco más oscuro */
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 9999;
-  backdrop-filter: blur(3px); /* Efecto moderno de desenfoque */
+  backdrop-filter: blur(3px);
 }
 
 .modal-content {
   background: white;
   padding: 2rem;
-  border-radius: 16px; /* Coincide con tu estilo redondeado */
+  border-radius: 16px;
   width: 90%;
   max-width: 450px;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
@@ -397,7 +399,7 @@ export default {
   border-radius: 8px;
   font-size: 1rem;
   transition: border-color 0.2s;
-  box-sizing: border-box; /* Importante para que no se salga */
+  box-sizing: border-box;
 }
 
 .form-group input:focus {
@@ -463,7 +465,6 @@ export default {
   background: #e9ecef;
 }
 
-/* Mensajes de error/loading simples */
 .loading-state, .error-message {
   text-align: center;
   padding: 2rem;
