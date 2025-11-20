@@ -39,12 +39,13 @@ def enviar_notificacion():
         msg['From'] = f"TourFer Reservas <{SENDER_EMAIL}>"
         msg['To'] = destinatario
         msg['Subject'] = "Confirmación de Reserva - TourFer"
-
+        print("Intentando conectar con Gmail...")
         # Cuerpo del mensaje
         msg.attach(MIMEText(mensaje_texto, 'plain'))
 
         # 3. Conectar con Gmail y enviar
-        server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
+        server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=60)
+        server.set_debuglevel(1)
         server.starttls() # Encriptación segura
         server.login(SENDER_EMAIL, SENDER_PASSWORD)
         server.sendmail(SENDER_EMAIL, destinatario, msg.as_string())
@@ -53,8 +54,14 @@ def enviar_notificacion():
         print(f"✅ Correo REAL enviado a {destinatario}")
         return jsonify({"estado": "enviado", "metodo": "SMTP Gmail"}), 200
 
+    except smtplib.SMTPConnectError:
+        print("❌ Error: No se pudo conectar al servidor SMTP (posible bloqueo de puerto).")
+        return jsonify({"error": "Error de conexión SMTP"}), 500
+    except smtplib.SMTPAuthenticationError:
+        print("❌ Error: Usuario o contraseña incorrectos.")
+        return jsonify({"error": "Error de autenticación"}), 500
     except Exception as e:
-        print(f"❌ Error enviando correo: {e}")
+        print(f"❌ Error general enviando correo: {e}")
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':

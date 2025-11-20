@@ -383,6 +383,8 @@ export default {
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
+  max-height: 90vh; 
+  overflow-y: auto;
 }
 
 @keyframes slideIn {
@@ -517,11 +519,12 @@ export default {
 .weather-widget {
   display: flex;
   align-items: center;
-  background: #e3f2fd; /* Azul clarito por defecto */
-  padding: 10px;
-  border-radius: 12px;
-  margin-bottom: 1.5rem;
+  background: #e3f2fd;
+  padding: 0.5rem 1rem; /* Menos padding vertical */
+  border-radius: 8px;   /* Bordes un poco menos redondeados para ahorrar espacio */
+  margin-bottom: 1rem;
   border: 1px solid #bbdefb;
+  font-size: 0.9rem;    /* Texto un poco más pequeño */
 }
 
 /* Cambiar color según clima (opcional) */
@@ -529,8 +532,8 @@ export default {
 .weather-widget.rain { background: #cfd8dc; border-color: #b0bec5; } /* Lluvia */
 
 .weather-icon img {
-  width: 50px;
-  height: 50px;
+  width: 40px;  /* Más pequeño (antes 50px) */
+  height: 40px;
 }
 
 .weather-info {
