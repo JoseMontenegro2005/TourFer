@@ -12,14 +12,16 @@ CORS(app)
 SMTP_SERVER = 'smtp.gmail.com'
 SMTP_PORT = 587
 # Pon aquí tu correo real
-SENDER_EMAIL = os.environ.get('EMAIL_USER', 'tourfer2003@gmail.com') 
-# Pon aquí la contraseña de aplicación de 16 letras (sin espacios)
-SENDER_PASSWORD = os.environ.get('EMAIL_PASS', 'lphk eauy yruy kazk') 
-API_KEY_SECRET = os.environ.get('NOTIFICACIONES_KEY', 'clave_segura_local_123')
+SENDER_EMAIL = os.environ.get('EMAIL_USER') 
+SENDER_PASSWORD = os.environ.get('EMAIL_PASS') 
+API_KEY_SECRET = os.environ.get('NOTIFICACIONES_KEY')
 
 @app.route('/enviar-correo', methods=['POST'])
 def enviar_notificacion():
-    # 1. Seguridad
+    if not SENDER_EMAIL or not SENDER_PASSWORD:
+        print("❌ ERROR CRÍTICO: Faltan credenciales de correo en las variables de entorno.")
+        return jsonify({"error": "Error de configuración del servidor"}), 500
+
     api_key_recibida = request.headers.get('X-Notification-Key')
     if api_key_recibida != API_KEY_SECRET:
         return jsonify({"error": "Acceso denegado"}), 403
