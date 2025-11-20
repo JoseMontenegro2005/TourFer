@@ -74,7 +74,7 @@ export default {
     async handleRegister() {
       this.error = null;
       try {
-        await axios.post('http://127.0.0.1:5002/register', {
+        await axios.post('https://tourfer-reservas.onrender.com/register', {
           nombre: this.nombre,
           email: this.email,
           password: this.password,
