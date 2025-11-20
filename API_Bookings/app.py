@@ -170,10 +170,17 @@ def create_reserva():
     except requests.exceptions.RequestException as e:
         print(f"ADVERTENCIA: Reserva {reserva_id} creada, pero falló la actualización de cupos: {e}")
     try:
-        requests.post('http://localhost:5003/enviar-correo', json={
-            "email": user_email,  
+        notificaciones_url = 'http://tourfer-notificaciones.onrender.com/enviar-correo' 
+        
+        headers = {
+            'Content-Type': 'application/json',
+            'X-Notification-Key': 'clave_segura_local_123' 
+                            }
+        requests.post(notificaciones_url, json={
+            "email": user_email,
             "mensaje": f"¡Hola! Tu reserva #{reserva_id} para el {fecha} ha sido confirmada."
-        }, timeout=2)
+        }, headers=headers, timeout=2)
+        
     except Exception as e:
         print(f"ADVERTENCIA: No se pudo enviar la notificación: {e}")
 
