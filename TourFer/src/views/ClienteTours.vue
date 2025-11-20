@@ -116,7 +116,7 @@ export default {
       isSubmitting: false,
       formReserva: {
         fecha: '',
-        personas: 1
+        cantidad_personas: 1
       }
     };
   },
@@ -153,7 +153,7 @@ export default {
         return;
       }
       this.selectedTour = tour;
-      this.formReserva = { fecha: '', personas: 1 };
+      this.formReserva = { fecha: '', cantidad_personas: 1 };
       this.showModal = true;
     },
 
@@ -168,7 +168,7 @@ export default {
         const datosReserva = {
           tour_id: this.selectedTour.id,
           fecha: this.formReserva.fecha,
-          personas: this.formReserva.personas
+          cantidad_personas: this.formReserva.personas
         };
         
         const url = 'https://tourfer-reservas.onrender.com/reservas';
