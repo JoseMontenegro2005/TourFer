@@ -1,5 +1,5 @@
 Flask
-Flask-MySQLdb
+psycopg2-binary
 python-dotenv
 requests
 Flask-JWT-Extended 

@@ -14,6 +14,9 @@ class Config:
     MYSQL_SSL_CA = os.getenv("MYSQL_SSL_CA", "ca.pem")
     
     API_KEY = os.getenv("API_KEY", "tourfer-catalogo-secret-key")
-
+# ...
+    MYSQL_SSL_DISABLED = False
+    
+    MYSQL_SSL = {'ssl': {'ca': '/etc/ssl/cert.pem'}} 
 def get_api_key():
     return Config.API_KEY

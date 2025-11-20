@@ -13,7 +13,7 @@ INSERT INTO roles (id, nombre) VALUES
 (2, 'Cliente');
 
 CREATE TABLE usuarios (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
@@ -25,13 +25,13 @@ CREATE TABLE usuarios (
 );
 
 CREATE TABLE reservas (
-    id INT AUTO_INCREMENT PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     tour_id INT NOT NULL, 
     usuario_id INT,
     fecha_reserva TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     cantidad_personas INT NOT NULL,
     costo_total DECIMAL(10, 2) NOT NULL,
-    estado ENUM('Pendiente', 'Confirmada', 'Cancelada') NOT NULL DEFAULT 'Pendiente',
+    estado VARCHAR(20) NOT NULL DEFAULT 'Pendiente' CHECK (estado IN ('Pendiente', 'Confirmada', 'Cancelada')),
     FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
 );
 

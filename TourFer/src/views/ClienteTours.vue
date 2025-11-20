@@ -68,11 +68,42 @@ export default {
       }
     },
     
-    handleComprar(tour) {
+    async handleComprar(tour) {
+// 1. Verificar autenticación
       if (!this.authStore.isAuthenticated) {
         this.$router.push('/login');
-      } else {
-        alert(`¡Iniciando reserva para: ${tour.nombre}!`);
+        return;
+      }
+
+      // 2. Recolectar datos (Usamos prompt temporalmente)
+      // Idealmente aquí abrirías un Modal <ReservaModal />
+      const fecha = prompt("Ingrese la fecha de reserva (YYYY-MM-DD):", new Date().toISOString().split('T')[0]);
+      if (!fecha) return; // Si cancela, no hacemos nada
+
+      const personas = prompt("¿Número de personas?", "1");
+      if (!personas) return;
+
+      try {
+        // 3. Preparar payload
+        const datosReserva = {
+          tour_id: tour.id,
+          fecha: fecha,
+          personas: parseInt(personas)
+        };
+
+        // 4. Enviar petición usando los headers del store
+        // NOTA: authStore.getAuthHeaders() ya devuelve { headers: { Authorization: ... } }
+        const url = 'https://tourfer-reservas.onrender.com/reservar'; // Ajusta si es local
+        
+        await axios.post(url, datosReserva, this.authStore.getAuthHeaders());
+
+        // 5. Éxito
+        alert(`¡Reserva confirmada para ${tour.nombre}! Revisa tu correo.`);
+
+      } catch (error) {
+        console.error(error);
+        const msg = error.response?.data?.msg || "Error al conectar con el servidor";
+        alert(`Error: ${msg}`);
       }
     }
   },
