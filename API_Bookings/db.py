@@ -13,7 +13,7 @@ def init_mysql(app, cfg):
 
     if cfg.MYSQL_SSL_CA and os.path.exists(cfg.MYSQL_SSL_CA):
         app.config['MYSQL_SSL_CA'] = cfg.MYSQL_SSL_CA
-        else:
+    else:
         print("ADVERTENCIA: No se encontró ca.pem, la conexión a Aiven podría fallar.")
         
     mysql.init_app(app)
