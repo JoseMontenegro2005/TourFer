@@ -92,7 +92,7 @@
 import axios from 'axios';
 import { useAuthStore } from '@/stores/authStore';
 
-const API_URL = 'http://127.0.0.1:5002';
+const API_URL = 'https://tourfer-reservas.onrender.com';
 
 const emptyForm = () => ({
   nombre: '',
