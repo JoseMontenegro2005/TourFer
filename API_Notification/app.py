@@ -5,24 +5,44 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import os
 import threading
+import socket # Necesario para el hack de IPv4
 
 app = Flask(__name__)
 CORS(app)
 
-# CONFIGURACIÓN GMAIL - PUERTO 587 (TLS)
+# CONFIGURACIÓN
 SMTP_SERVER = 'smtp.gmail.com'
 SMTP_PORT = 587
 SENDER_EMAIL = os.environ.get('EMAIL_USER')
-SENDER_PASSWORD = os.environ.get('EMAIL_PASS')
+# Quitamos los espacios de la contraseña por si acaso
+SENDER_PASSWORD = os.environ.get('EMAIL_PASS', '').replace(' ', '') 
 API_KEY_SECRET = os.environ.get('NOTIFICACIONES_KEY')
 
+# --- HACK PARA FORZAR IPv4 ---
+# Esto evita que Render intente conectar por IPv6 y se quede colgado
+_orig_create_connection = socket.create_connection
+
+def patched_create_connection(address, timeout=socket._GLOBAL_DEFAULT_TIMEOUT, source_address=None):
+    host, port = address
+    # Si es gmail, forzamos la IP v4
+    if host == SMTP_SERVER:
+        try:
+            # Buscamos solo la dirección IPv4 (family=socket.AF_INET)
+            info = socket.getaddrinfo(host, port, socket.AF_INET)
+            if info:
+                host = info[0][4][0] # Usamos la IP numérica directamente
+                address = (host, port)
+        except Exception:
+            pass # Si falla, dejamos que intente normal
+            
+    return _orig_create_connection(address, timeout, source_address)
+
+socket.create_connection = patched_create_connection
+# -----------------------------
+
 def tarea_enviar_correo(destinatario, mensaje_texto):
-    """
-    Función que se ejecuta en segundo plano.
-    Tiene su propio manejo de errores para no afectar la respuesta HTTP.
-    """
     try:
-        print(f"🔄 [Background] Iniciando conexión a Gmail (Puerto {SMTP_PORT}) para {destinatario}...")
+        print(f"🔄 [Background] Conectando a Gmail (IPv4 Forzado)...")
         
         msg = MIMEMultipart()
         msg['From'] = f"TourFer Reservas <{SENDER_EMAIL}>"
@@ -30,27 +50,22 @@ def tarea_enviar_correo(destinatario, mensaje_texto):
         msg['Subject'] = "Confirmación de Reserva - TourFer"
         msg.attach(MIMEText(mensaje_texto, 'plain'))
 
-        # Conexión SMTP estándar con timeout de 60 segundos
         server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=60)
-        
-        # Protocolo de seguridad TLS para puerto 587
-        server.ehlo() 
-        server.starttls() 
         server.ehlo()
-
-        # Login y envío
+        server.starttls()
+        server.ehlo()
+        
         server.login(SENDER_EMAIL, SENDER_PASSWORD)
         server.sendmail(SENDER_EMAIL, destinatario, msg.as_string())
         server.quit()
 
-        print(f"✅ [Background] Correo enviado exitosamente a {destinatario}")
+        print(f"✅ [Background] CORREO ENVIADO EXITOSAMENTE a {destinatario}")
 
     except Exception as e:
-        print(f"❌ [Background] Error enviando correo: {e}")
+        print(f"❌ [Background] Error FATAL enviando correo: {e}")
 
 @app.route('/enviar-correo', methods=['POST'])
 def recibir_peticion():
-    # 1. Verificación de Seguridad
     api_key_recibida = request.headers.get('X-Notification-Key')
     if api_key_recibida != API_KEY_SECRET:
         return jsonify({"error": "Acceso denegado"}), 403
@@ -62,13 +77,10 @@ def recibir_peticion():
     if not destinatario or not mensaje_texto:
         return jsonify({"error": "Faltan datos"}), 400
 
-    # 2. Lanzar el hilo en segundo plano
-    # Esto permite responder al usuario INMEDIATAMENTE mientras el correo se envía después
     hilo = threading.Thread(target=tarea_enviar_correo, args=(destinatario, mensaje_texto))
     hilo.start()
 
-    print(f"🚀 Petición aceptada. Procesando envío en segundo plano.")
-    return jsonify({"estado": "en proceso", "mensaje": "El correo se está enviando"}), 202
+    return jsonify({"estado": "en proceso"}), 202
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5003))
