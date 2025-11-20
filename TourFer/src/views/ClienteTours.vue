@@ -160,8 +160,13 @@ export default {
       try {
         // OpenWeather busca por nombre de ciudad. 
         // Agregamos ',CO' para asegurar que busque en Colombia.
-        const query = `${destino},CO`; 
-        const url = `https://api.openweathermap.org/data/2.5/weather?q=${query}&appid=${this.openWeatherKey}&units=metric&lang=es`;
+        let ciudad = destino;
+        if (destino.includes(',')) {
+        ciudad = destino.split(',')[0].trim();
+        }
+        const apiKey = this.openWeatherKey;
+        const query = `${encodeURIComponent(ciudad)},CO`; 
+        const url = `https://api.openweathermap.org/data/2.5/weather?q=${query}&appid=${apiKey}&units=metric&lang=es`;
         
         const response = await axios.get(url);
         const data = response.data;
@@ -170,11 +175,13 @@ export default {
           temp: Math.round(data.main.temp),
           descripcion: data.weather[0].description,
           icon: data.weather[0].icon,
-          climaPrincipal: data.weather[0].main.toLowerCase() // Rain, Clear, Clouds
+          climaPrincipal: data.weather[0].main.toLowerCase()
         };
 
       } catch (e) {
-        console.log("No se pudo obtener el clima para este destino.");
+        // Tip: Imprime el error completo para ver si es 404 (ciudad no encontrada) o 401 (API Key inválida)
+        console.warn("Error clima:", e.response?.data?.message || e.message);
+        // No mostramos alerta al usuario para no ser intrusivos, simplemente no sale el widget.
       }
     },
     
