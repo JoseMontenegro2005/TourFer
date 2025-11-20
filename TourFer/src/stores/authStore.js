@@ -35,7 +35,7 @@ export const useAuthStore = defineStore('auth', {
     async login(email, password) {
       this.error = null;
       try {
-        const response = await axios.post('http://127.0.0.1:5002/login', {
+        const response = await axios.post('https://tourfer-reservas.onrender.com/login', {
           email: email,
           password: password,
         });

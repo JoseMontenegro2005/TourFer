@@ -4,12 +4,15 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Config:
-    PG_HOST = os.getenv("PG_HOST")
-    PG_USER = os.getenv("PG_USER")
-    PG_PASSWORD = os.getenv("PG_PASSWORD")
-    PG_DB = "postgres" # Supabase usa esta por defecto
-    PG_PORT = 5432
 
+    MYSQL_HOST = os.getenv("MYSQL_HOST", "localhost")
+    MYSQL_USER = os.getenv("MYSQL_USER", "user_catalogo")
+    MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "tourpass123")
+    MYSQL_DB = os.getenv("MYSQL_DB", "catalogo_db")
+    MYSQL_PORT = int(os.getenv("MYSQL_PORT", 3306))
+    MYSQL_CURSORCLASS = "DictCursor"
+    MYSQL_SSL_CA = os.getenv("MYSQL_SSL_CA", "ca.pem")
+    
     API_KEY = os.getenv("API_KEY", "tourfer-catalogo-secret-key")
 # ...
     MYSQL_SSL_DISABLED = False

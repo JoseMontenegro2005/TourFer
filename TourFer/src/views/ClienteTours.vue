@@ -58,7 +58,7 @@ export default {
     async fetchTours() {
       this.isLoading = true;
       try {
-        const response = await axios.get('http://127.0.0.1:5002/public/tours');
+        const response = await axios.get('https://tourfer-reservas.onrender.com/public/tours');
         this.tours = response.data;
       } catch (e) {
         console.error(e);
