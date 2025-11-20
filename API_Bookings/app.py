@@ -110,8 +110,7 @@ def create_reserva():
     data = request.get_json()
     tour_id = data['tour_id']
     cantidad_personas = data['cantidad_personas']
-
-    # 1. Validar Tour con API externa
+    fecha = data.get('fecha', 'Fecha sin definir')
     try:
         tour_url = f"{catalogo_api_config['url']}/tours/{tour_id}"
         response = requests.get(tour_url)
@@ -121,7 +120,6 @@ def create_reserva():
     except requests.exceptions.RequestException as e:
         return jsonify({"error": f"Error al comunicar con API Catálogo: {e}"}), 503
 
-    # 2. Validar cupos
     if tour_data['cupos_disponibles'] < cantidad_personas:
         return jsonify({
             "error": "No hay suficientes cupos disponibles",
@@ -130,10 +128,9 @@ def create_reserva():
 
     costo_total = float(tour_data['precio']) * cantidad_personas
     
-    # 3. Insertar en BD
     conn = get_db_connection(Config)
     cur = conn.cursor(cursor_factory=RealDictCursor)
-    
+    user_email = "sin_correo@tourfer.com"
     try:
         # NOTA IMPORTANTE: PostgreSQL no tiene lastrowid. 
         # Usamos RETURNING id para obtener el ID generado.
@@ -147,6 +144,12 @@ def create_reserva():
         )
         nuevo_registro = cur.fetchone()
         reserva_id = nuevo_registro['id']
+
+        cur.execute("SELECT email FROM usuarios WHERE id = %s", (current_user_id,))
+        usuario_data = cur.fetchone()
+        if usuario_data:
+            user_email = usuario_data['email']
+
         conn.commit()
     except Exception as e:
         conn.rollback()
@@ -166,12 +169,21 @@ def create_reserva():
         requests.patch(update_cupos_url, json=payload, headers=headers)
     except requests.exceptions.RequestException as e:
         print(f"ADVERTENCIA: Reserva {reserva_id} creada, pero falló la actualización de cupos: {e}")
+    try:
+        requests.post('http://localhost:5003/enviar-correo', json={
+            "email": user_email,  
+            "mensaje": f"¡Hola! Tu reserva #{reserva_id} para el {fecha} ha sido confirmada."
+        }, timeout=2)
+    except Exception as e:
+        print(f"ADVERTENCIA: No se pudo enviar la notificación: {e}")
 
     return jsonify({
         "mensaje": "Reserva creada exitosamente",
         "reserva_id": reserva_id,
         "costo_total": costo_total
     }), 201
+
+    
     
 @app.route('/mis-reservas', methods=['GET'])
 @jwt_required()
