@@ -51,7 +51,15 @@
           <h2>Reservar: {{ selectedTour?.nombre }}</h2>
           <button class="btn-close" @click="cerrarModal">×</button>
         </div>
-
+        <div v-if="weather" class="weather-widget" :class="weather.climaPrincipal">
+          <div class="weather-icon">
+            <img :src="`http://openweathermap.org/img/wn/${weather.icon}@2x.png`" alt="Clima">
+          </div>
+          <div class="weather-info">
+            <span class="weather-temp">{{ weather.temp }}°C</span>
+            <span class="weather-desc">Clima actual en {{ selectedTour.destino }}: {{ weather.descripcion }}</span>
+          </div>
+        </div>
         <form @submit.prevent="enviarReserva" class="reserva-form">
           <div class="form-group">
             <label>Fecha de Reserva:</label>
@@ -117,7 +125,9 @@ export default {
       formReserva: {
         fecha: '',
         cantidad_personas: 1
-      }
+      },
+      weather: null, // Nueva variable para el clima
+      openWeatherKey: '608b9a33c6a5a8a5d9c5d037911517a2' // ¡Pega tu key de OpenWeather aquí!
     };
   },
 
@@ -145,6 +155,28 @@ export default {
         this.isLoading = false;
       }
     },
+    async obtenerClima(destino) {
+      this.weather = null; // Reiniciar
+      try {
+        // OpenWeather busca por nombre de ciudad. 
+        // Agregamos ',CO' para asegurar que busque en Colombia.
+        const query = `${destino},CO`; 
+        const url = `https://api.openweathermap.org/data/2.5/weather?q=${query}&appid=${this.openWeatherKey}&units=metric&lang=es`;
+        
+        const response = await axios.get(url);
+        const data = response.data;
+
+        this.weather = {
+          temp: Math.round(data.main.temp),
+          descripcion: data.weather[0].description,
+          icon: data.weather[0].icon,
+          climaPrincipal: data.weather[0].main.toLowerCase() // Rain, Clear, Clouds
+        };
+
+      } catch (e) {
+        console.log("No se pudo obtener el clima para este destino.");
+      }
+    },
     
     abrirModalReserva(tour) {
       if (!this.authStore.isAuthenticated) {
@@ -154,6 +186,7 @@ export default {
       }
       this.selectedTour = tour;
       this.formReserva = { fecha: '', cantidad_personas: 1 };
+      this.obtenerClima(tour.destino);
       this.showModal = true;
     },
 
@@ -473,5 +506,41 @@ export default {
 }
 .error-message {
   color: #e74c3c;
+}
+.weather-widget {
+  display: flex;
+  align-items: center;
+  background: #e3f2fd; /* Azul clarito por defecto */
+  padding: 10px;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  border: 1px solid #bbdefb;
+}
+
+/* Cambiar color según clima (opcional) */
+.weather-widget.clear { background: #fff9c4; border-color: #fff59d; } /* Soleado */
+.weather-widget.rain { background: #cfd8dc; border-color: #b0bec5; } /* Lluvia */
+
+.weather-icon img {
+  width: 50px;
+  height: 50px;
+}
+
+.weather-info {
+  display: flex;
+  flex-direction: column;
+  margin-left: 10px;
+}
+
+.weather-temp {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #333;
+}
+
+.weather-desc {
+  font-size: 0.9rem;
+  color: #666;
+  text-transform: capitalize;
 }
 </style>

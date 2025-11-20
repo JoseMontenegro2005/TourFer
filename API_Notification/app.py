@@ -1,37 +1,60 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import time
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 import os
 
 app = Flask(__name__)
 CORS(app)
 
+# CONFIGURACIÓN GMAIL (Usa variables de entorno en producción)
+SMTP_SERVER = 'smtp.gmail.com'
+SMTP_PORT = 587
+# Pon aquí tu correo real
+SENDER_EMAIL = os.environ.get('EMAIL_USER', 'tourfer2003@gmail.com') 
+# Pon aquí la contraseña de aplicación de 16 letras (sin espacios)
+SENDER_PASSWORD = os.environ.get('EMAIL_PASS', 'lphk eauy yruy kazk') 
 API_KEY_SECRET = os.environ.get('NOTIFICACIONES_KEY', 'clave_segura_local_123')
 
 @app.route('/enviar-correo', methods=['POST'])
 def enviar_notificacion():
+    # 1. Seguridad
     api_key_recibida = request.headers.get('X-Notification-Key')
-    
     if api_key_recibida != API_KEY_SECRET:
-        return jsonify({"error": "Acceso denegado: API Key inválida"}), 403
-    data = request.get_json()
-    email = data.get('email')
-    mensaje = data.get('mensaje')
+        return jsonify({"error": "Acceso denegado"}), 403
 
-    if not email or not mensaje:
+    data = request.get_json()
+    destinatario = data.get('email')
+    mensaje_texto = data.get('mensaje')
+
+    if not destinatario or not mensaje_texto:
         return jsonify({"error": "Faltan datos"}), 400
 
-    # Simulamos el proceso de envío
-    print("------------------------------------------------")
-    print(f"📧 [NUEVO CORREO] Enviando a: {email}")
-    print(f"📝 Mensaje: {mensaje}")
-    time.sleep(1.5) # Simulamos que tarda un poco en enviar
-    print("✅ Correo enviado exitosamente.")
-    print("------------------------------------------------")
+    try:
+        # 2. Crear el correo
+        msg = MIMEMultipart()
+        msg['From'] = f"TourFer Reservas <{SENDER_EMAIL}>"
+        msg['To'] = destinatario
+        msg['Subject'] = "Confirmación de Reserva - TourFer"
 
-    return jsonify({"estado": "enviado"}), 200
+        # Cuerpo del mensaje
+        msg.attach(MIMEText(mensaje_texto, 'plain'))
+
+        # 3. Conectar con Gmail y enviar
+        server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
+        server.starttls() # Encriptación segura
+        server.login(SENDER_EMAIL, SENDER_PASSWORD)
+        server.sendmail(SENDER_EMAIL, destinatario, msg.as_string())
+        server.quit()
+
+        print(f"✅ Correo REAL enviado a {destinatario}")
+        return jsonify({"estado": "enviado", "metodo": "SMTP Gmail"}), 200
+
+    except Exception as e:
+        print(f"❌ Error enviando correo: {e}")
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    # En Render, el puerto también se lee del entorno
     port = int(os.environ.get('PORT', 5003))
     app.run(debug=True, port=port, host='0.0.0.0')
