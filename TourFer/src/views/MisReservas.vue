@@ -58,7 +58,7 @@ export default {
           throw new Error('Usuario no autenticado.');
         }
 
-        const response = await axios.get('http://127.0.0.1:5002/mis-reservas', config);
+        const response = await axios.get('https://tourfer-reservas.onrender.com/mis-reservas', config);
         
         reservas.value = response.data;
 
