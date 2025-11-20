@@ -1,14 +1,11 @@
 from flask import Flask, jsonify, request
 from functools import wraps
 from config import Config, get_api_key
-from db import get_db_connection # <-- CAMBIO: Importamos la función de conexión
-import psycopg2.extras # <-- CAMBIO: Necesario para diccionarios
+from db import get_db_connection
+import MySQLdb.cursors # <--- CAMBIO: Necesario para recibir diccionarios
 
 app = Flask(__name__)
 
-# (Ya no usamos init_mysql aquí, la conexión se crea por petición)
-
-# --- DECORADOR DE SEGURIDAD ---
 def require_api_key(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -23,9 +20,9 @@ def require_api_key(f):
 
 @app.route('/tours', methods=['GET'])
 def get_all_tours():
-    conn = get_db_connection()
-    # Usamos RealDictCursor para recibir diccionarios, no tuplas
-    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    conn = get_db_connection(Config) # Pasamos Config si tu db.py lo requiere
+    # CAMBIO: Usamos DictCursor de MySQLdb
+    cur = conn.cursor(cursorclass=MySQLdb.cursors.DictCursor)
     
     cur.execute("SELECT * FROM tours")
     tours = cur.fetchall()
@@ -36,8 +33,8 @@ def get_all_tours():
 
 @app.route('/tours/<int:id>', methods=['GET'])
 def get_tour_by_id(id):
-    conn = get_db_connection()
-    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    conn = get_db_connection(Config)
+    cur = conn.cursor(cursorclass=MySQLdb.cursors.DictCursor)
     
     cur.execute("SELECT * FROM tours WHERE id = %s", (id,))
     tour = cur.fetchone()
@@ -51,8 +48,8 @@ def get_tour_by_id(id):
 
 @app.route('/guias', methods=['GET'])
 def get_all_guias():
-    conn = get_db_connection()
-    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    conn = get_db_connection(Config)
+    cur = conn.cursor(cursorclass=MySQLdb.cursors.DictCursor)
     
     cur.execute("SELECT id, nombre, email, biografia FROM guias")
     guias = cur.fetchall()
@@ -67,24 +64,23 @@ def get_all_guias():
 @require_api_key
 def create_tour():
     data = request.get_json()
-    conn = get_db_connection()
-    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    conn = get_db_connection(Config)
+    cur = conn.cursor(cursorclass=MySQLdb.cursors.DictCursor)
     
     try:
-        # CAMBIO IMPORTANTE: PostgreSQL usa 'RETURNING id' para obtener el ID creado
+        # CAMBIO: MySQL no soporta RETURNING id en el INSERT.
         cur.execute(
             """
             INSERT INTO tours (nombre, destino, descripcion, duracion_horas, precio, cupos_disponibles, guia_id) 
             VALUES (%s, %s, %s, %s, %s, %s, %s)
-            RETURNING id
             """,
             (data['nombre'], data['destino'], data['descripcion'], data['duracion_horas'], 
              data['precio'], data['cupos_disponibles'], data.get('guia_id'))
         )
         conn.commit()
         
-        # Obtenemos el ID devuelto por el RETURNING
-        new_id = cur.fetchone()['id']
+        # CAMBIO: Obtenemos el ID generado así:
+        new_id = cur.lastrowid
         
         cur.close()
         conn.close()
@@ -100,57 +96,64 @@ def create_tour():
 @require_api_key
 def update_tour(id):
     data = request.get_json()
-    conn = get_db_connection()
+    conn = get_db_connection(Config)
     cur = conn.cursor()
     
-    cur.execute("""
-        UPDATE tours
-        SET nombre = %s,
-            destino = %s,
-            descripcion = %s,
-            duracion_horas = %s,
-            precio = %s,
-            cupos_disponibles = %s,
-            guia_id = %s
-        WHERE id = %s
-    """, (data['nombre'], data['destino'], data['descripcion'], data['duracion_horas'], 
-          data['precio'], data['cupos_disponibles'], data.get('guia_id'), id))
-    
-    conn.commit()
-    rows_affected = cur.rowcount
-    cur.close()
-    conn.close()
-    
-    if rows_affected == 0:
-        return jsonify({"error": "Tour no encontrado"}), 404
+    try:
+        cur.execute("""
+            UPDATE tours
+            SET nombre = %s,
+                destino = %s,
+                descripcion = %s,
+                duracion_horas = %s,
+                precio = %s,
+                cupos_disponibles = %s,
+                guia_id = %s
+            WHERE id = %s
+        """, (data['nombre'], data['destino'], data['descripcion'], data['duracion_horas'], 
+              data['precio'], data['cupos_disponibles'], data.get('guia_id'), id))
         
-    return jsonify({"mensaje": "Tour actualizado exitosamente"})
+        conn.commit()
+        rows_affected = cur.rowcount # Funciona igual en MySQL
+        cur.close()
+        conn.close()
+        
+        if rows_affected == 0:
+            return jsonify({"error": "Tour no encontrado"}), 404
+            
+        return jsonify({"mensaje": "Tour actualizado exitosamente"})
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/tours/<int:id>', methods=['DELETE'])
 @require_api_key
 def delete_tour(id):
-    conn = get_db_connection()
+    conn = get_db_connection(Config)
     cur = conn.cursor()
     
-    cur.execute("DELETE FROM tours WHERE id = %s", (id,))
-    conn.commit()
-    rows_affected = cur.rowcount
-    
-    cur.close()
-    conn.close()
+    try:
+        cur.execute("DELETE FROM tours WHERE id = %s", (id,))
+        conn.commit()
+        rows_affected = cur.rowcount
+        
+        cur.close()
+        conn.close()
 
-    if rows_affected == 0:
-        return jsonify({"error": "Tour no encontrado para eliminar"}), 404
+        if rows_affected == 0:
+            return jsonify({"error": "Tour no encontrado para eliminar"}), 404
 
-    return jsonify({"mensaje": "Tour eliminado exitosamente"})
+        return jsonify({"mensaje": "Tour eliminado exitosamente"})
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/tours/<int:id>/cupos', methods=['PATCH'])
 @require_api_key
 def update_tour_cupos(id):
     data = request.get_json()
-    conn = get_db_connection()
-    # Usamos RealDictCursor para leer los cupos actuales fácilmente
-    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    conn = get_db_connection(Config)
+    cur = conn.cursor(cursorclass=MySQLdb.cursors.DictCursor)
     
     try:
         cur.execute("SELECT cupos_disponibles FROM tours WHERE id = %s", (id,))
@@ -195,16 +198,18 @@ def update_tour_cupos(id):
 @require_api_key
 def create_guia():
     data = request.get_json()
-    conn = get_db_connection()
-    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+    conn = get_db_connection(Config)
+    cur = conn.cursor(cursorclass=MySQLdb.cursors.DictCursor)
     
     try:
+        # CAMBIO: Quitamos RETURNING id
         cur.execute(
-            "INSERT INTO guias (nombre, email) VALUES (%s, %s) RETURNING id", 
+            "INSERT INTO guias (nombre, email) VALUES (%s, %s)", 
             (data['nombre'], data['email'])
         )
         conn.commit()
-        new_id = cur.fetchone()['id']
+        # CAMBIO: Usamos lastrowid
+        new_id = cur.lastrowid
         
         cur.close()
         conn.close()

@@ -1,10 +1,9 @@
 from flask import Flask, jsonify, request
 import requests
 from config import Config, get_catalogo_api_config
-# Importamos tu función de conexión desde db.py
 from db import get_db_connection
-import psycopg2
-from psycopg2.extras import RealDictCursor
+import MySQLdb
+from MySQLdb.cursors import DictCursor # Usamos el cursor de MySQL
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity, get_jwt
 from functools import wraps
@@ -39,7 +38,6 @@ def register():
 
     password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
 
-    # Conexión usando tu función importada de db.py
     conn = get_db_connection(Config)
     cur = conn.cursor()
     try:
@@ -51,8 +49,7 @@ def register():
         cur.close()
         conn.close()
         return jsonify({"mensaje": "Usuario registrado exitosamente"}), 201
-    except psycopg2.IntegrityError:
-        # Captura error de duplicados (email único)
+    except MySQLdb.IntegrityError: # CORREGIDO: Usamos la excepción de MySQL
         conn.rollback()
         cur.close()
         conn.close()
@@ -73,8 +70,8 @@ def login():
         return jsonify({"error": "Faltan email o password"}), 400
 
     conn = get_db_connection(Config)
-    # RealDictCursor permite acceder a las columnas por nombre (usuario['password'])
-    cur = conn.cursor(cursor_factory=RealDictCursor)
+    # CORREGIDO: Usamos DictCursor para MySQL
+    cur = conn.cursor(cursorclass=DictCursor)
     cur.execute("SELECT id, password, rol_id FROM usuarios WHERE email = %s", (email,))
     usuario = cur.fetchone()
     cur.close()
@@ -95,7 +92,8 @@ def login():
 @admin_required
 def get_all_users():
     conn = get_db_connection(Config)
-    cur = conn.cursor(cursor_factory=RealDictCursor)
+    # CORREGIDO
+    cur = conn.cursor(cursorclass=DictCursor)
     cur.execute("SELECT id, nombre, email, rol_id FROM usuarios")
     usuarios = cur.fetchall()
     cur.close()
@@ -111,6 +109,8 @@ def create_reserva():
     tour_id = data['tour_id']
     cantidad_personas = data['cantidad_personas']
     fecha = data.get('fecha', 'Fecha sin definir')
+    
+    # 1. Validar Tour con API externa
     try:
         tour_url = f"{catalogo_api_config['url']}/tours/{tour_id}"
         response = requests.get(tour_url)
@@ -120,6 +120,7 @@ def create_reserva():
     except requests.exceptions.RequestException as e:
         return jsonify({"error": f"Error al comunicar con API Catálogo: {e}"}), 503
 
+    # 2. Validar cupos
     if tour_data['cupos_disponibles'] < cantidad_personas:
         return jsonify({
             "error": "No hay suficientes cupos disponibles",
@@ -128,29 +129,31 @@ def create_reserva():
 
     costo_total = float(tour_data['precio']) * cantidad_personas
     
+    # 3. Insertar en BD
     conn = get_db_connection(Config)
-    cur = conn.cursor(cursor_factory=RealDictCursor)
+    cur = conn.cursor(cursorclass=DictCursor) # CORREGIDO
     user_email = "sin_correo@tourfer.com"
+    
     try:
-        # NOTA IMPORTANTE: PostgreSQL no tiene lastrowid. 
-        # Usamos RETURNING id para obtener el ID generado.
+        # CORREGIDO: Quitamos RETURNING id porque MySQL no lo soporta
         cur.execute(
             """
             INSERT INTO reservas (tour_id, usuario_id, cantidad_personas, costo_total, estado) 
             VALUES (%s, %s, %s, %s, %s) 
-            RETURNING id
             """,
             (tour_id, current_user_id, cantidad_personas, costo_total, 'Confirmada') 
         )
-        nuevo_registro = cur.fetchone()
-        reserva_id = nuevo_registro['id']
+        conn.commit()
+        
+        # CORREGIDO: Obtenemos el ID así
+        reserva_id = cur.lastrowid
 
+        # Consultamos el email
         cur.execute("SELECT email FROM usuarios WHERE id = %s", (current_user_id,))
         usuario_data = cur.fetchone()
         if usuario_data:
             user_email = usuario_data['email']
 
-        conn.commit()
     except Exception as e:
         conn.rollback()
         cur.close()
@@ -169,13 +172,15 @@ def create_reserva():
         requests.patch(update_cupos_url, json=payload, headers=headers)
     except requests.exceptions.RequestException as e:
         print(f"ADVERTENCIA: Reserva {reserva_id} creada, pero falló la actualización de cupos: {e}")
+    
+    # 5. Notificaciones
     try:
-        notificaciones_url = 'http://tourfer-notificaciones.onrender.com/enviar-correo' 
+        notificaciones_url = 'https://tourfer-notificaciones.onrender.com/enviar-correo' # Asegúrate que sea HTTPS en producción
         
         headers = {
             'Content-Type': 'application/json',
             'X-Notification-Key': 'clave_segura_local_123' 
-                            }
+        }
         requests.post(notificaciones_url, json={
             "email": user_email,
             "mensaje": f"¡Hola! Tu reserva #{reserva_id} para el {fecha} ha sido confirmada."
@@ -191,20 +196,20 @@ def create_reserva():
     }), 201
 
     
-    
 @app.route('/mis-reservas', methods=['GET'])
 @jwt_required()
 def get_mis_reservas():
     current_user_id = get_jwt_identity()
     conn = get_db_connection(Config)
-    cur = conn.cursor(cursor_factory=RealDictCursor)
+    # CORREGIDO
+    cur = conn.cursor(cursorclass=DictCursor)
     cur.execute("SELECT * FROM reservas WHERE usuario_id = %s", (current_user_id,))
     reservas = cur.fetchall()
     cur.close()
     conn.close()
     return jsonify(reservas)
 
-# --- RUTAS DE PROXY ADMIN (Sin cambios de lógica de BD, solo requests) ---
+# --- RUTAS DE PROXY ADMIN (Sin cambios) ---
 
 @app.route('/admin/tours', methods=['POST'])
 @admin_required

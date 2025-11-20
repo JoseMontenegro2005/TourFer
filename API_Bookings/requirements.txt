@@ -1,7 +1,7 @@
 Flask
-psycopg2-binary
 python-dotenv
 requests
+Flask-MySQLdb
 Flask-JWT-Extended 
 Flask-Bcrypt
 Flask-cors
