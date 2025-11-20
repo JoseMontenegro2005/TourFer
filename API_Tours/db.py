@@ -1,21 +1,35 @@
-from flask_mysqldb import MySQL
+import MySQLdb
 import os
 
-mysql = MySQL()
+def get_db_connection(config):
+    """
+    Crea una conexión a base de datos MySQL nativa compatible con 
+    el código de app.py. Soporta SSL para Aiven.
+    """
+    
+    # Configuramos SSL si existe el certificado (para Aiven)
+    ssl_config = None
+    # Verificamos si existe la config MYSQL_SSL_CA o si usas DB_SSL_CA
+    ca_path = getattr(config, 'MYSQL_SSL_CA', None)
+    
+    if ca_path and os.path.exists(ca_path):
+        ssl_config = {'ca': ca_path}
+        print(f"Conectando con SSL usando: {ca_path}")
 
-def init_mysql(app, cfg):
+    # Intentamos obtener las variables, soportando ambos nombres (DB_... o MYSQL_...)
+    host = getattr(config, 'MYSQL_HOST', getattr(config, 'DB_HOST', None))
+    user = getattr(config, 'MYSQL_USER', getattr(config, 'DB_USER', None))
+    password = getattr(config, 'MYSQL_PASSWORD', getattr(config, 'DB_PASSWORD', None))
+    db_name = getattr(config, 'MYSQL_DB', getattr(config, 'DB_NAME', None))
+    port = getattr(config, 'MYSQL_PORT', getattr(config, 'DB_PORT', 3306))
 
-    app.config['MYSQL_HOST'] = cfg.MYSQL_HOST
-    app.config['MYSQL_USER'] = cfg.MYSQL_USER
-    app.config['MYSQL_PASSWORD'] = cfg.MYSQL_PASSWORD
-    app.config['MYSQL_DB'] = cfg.MYSQL_DB
-    app.config['MYSQL_PORT'] = cfg.MYSQL_PORT
-    app.config['MYSQL_CURSORCLASS'] = cfg.MYSQL_CURSORCLASS
-
-    if cfg.MYSQL_SSL_CA and os.path.exists(cfg.MYSQL_SSL_CA):
-        app.config['MYSQL_SSL_CA'] = cfg.MYSQL_SSL_CA
-    else:
-        print("ADVERTENCIA: No se encontró ca.pem, la conexión a Aiven podría fallar.")
-        
-    mysql.init_app(app)
-    return mysql
+    conn = MySQLdb.connect(
+        host=host,
+        user=user,
+        passwd=password,
+        db=db_name,
+        port=int(port),
+        ssl=ssl_config # Aquí inyectamos la configuración SSL
+    )
+    
+    return conn
