@@ -9,8 +9,10 @@ class Config:
     MYSQL_USER = os.getenv("MYSQL_USER", "user_catalogo")
     MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "tourpass123")
     MYSQL_DB = os.getenv("MYSQL_DB", "catalogo_db")
+    MYSQL_PORT = int(os.getenv("MYSQL_PORT", 3306))
     MYSQL_CURSORCLASS = "DictCursor"
-
+    MYSQL_SSL_CA = os.getenv("MYSQL_SSL_CA", "ca.pem")
+    
     API_KEY = os.getenv("API_KEY", "tourfer-catalogo-secret-key")
 
 def get_api_key():
