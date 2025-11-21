@@ -7,36 +7,46 @@ import threading
 app = Flask(__name__)
 CORS(app)
 
-# CONFIGURACIÓN
-RESEND_API_KEY = os.environ.get('RESEND_API_KEY')
+# CONFIGURACIÓN SENDGRID
+SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY')
+FROM_EMAIL = os.environ.get('FROM_EMAIL') # Tu correo verificado en SendGrid
 API_KEY_SECRET = os.environ.get('NOTIFICACIONES_KEY')
 
 def tarea_enviar_correo(destinatario, mensaje_texto):
     try:
-        print(f"🔄 [Background] Enviando vía Resend API a {destinatario}...", flush=True)
+        print(f"🔄 [Background] Enviando vía SendGrid a {destinatario}...", flush=True)
         
-        # Configuración de la petición a Resend
-        url = "https://api.resend.com/emails"
+        url = "https://api.sendgrid.com/v3/mail/send"
+        
         headers = {
-            "Authorization": f"Bearer {RESEND_API_KEY}",
+            "Authorization": f"Bearer {SENDGRID_API_KEY}",
             "Content-Type": "application/json"
         }
         
-        # NOTA: En el modo de prueba de Resend, solo puedes enviar correos 
-        # a la dirección con la que te registraste.
+        # Estructura JSON específica de SendGrid
         payload = {
-            "from": "TourFer <onboarding@resend.dev>", # Correo genérico permitido por Resend
-            "to": [destinatario],
-            "subject": "Confirmación de Reserva - TourFer",
-            "html": f"<p>{mensaje_texto}</p>" # Soporta HTML básico
+            "personalizations": [
+                {
+                    "to": [{"email": destinatario}],
+                    "subject": "Confirmación de Reserva - TourFer"
+                }
+            ],
+            "from": {"email": FROM_EMAIL, "name": "TourFer Reservas"},
+            "content": [
+                {
+                    "type": "text/plain",
+                    "value": mensaje_texto
+                }
+            ]
         }
 
         response = requests.post(url, json=payload, headers=headers)
 
-        if response.status_code == 200:
-            print(f"✅ [Background] CORREO ENVIADO (ID: {response.json().get('id')})", flush=True)
+        # SendGrid devuelve 202 Accepted si todo salió bien
+        if response.status_code == 202:
+            print(f"✅ [Background] CORREO ENVIADO EXITOSAMENTE", flush=True)
         else:
-            print(f"❌ [Background] Error Resend: {response.status_code} - {response.text}", flush=True)
+            print(f"❌ [Background] Error SendGrid ({response.status_code}): {response.text}", flush=True)
 
     except Exception as e:
         print(f"❌ [Background] Error FATAL: {e}", flush=True)
@@ -56,7 +66,6 @@ def recibir_peticion():
     if not destinatario:
         return jsonify({"error": "Faltan datos"}), 400
 
-    # Hilo en segundo plano (sigue siendo buena práctica)
     hilo = threading.Thread(target=tarea_enviar_correo, args=(destinatario, mensaje_texto))
     hilo.start()
 
