@@ -184,7 +184,7 @@ def create_reserva():
         requests.post(notificaciones_url, json={
             "email": user_email,
             "mensaje": f"¡Hola! Tu reserva #{reserva_id} para el {fecha} ha sido confirmada."
-        }, headers=headers, timeout=2)
+        }, headers=headers, timeout=10)
         
     except Exception as e:
         print(f"ADVERTENCIA: No se pudo enviar la notificación: {e}")
