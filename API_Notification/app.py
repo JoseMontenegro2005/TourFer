@@ -10,14 +10,14 @@ import socket
 app = Flask(__name__)
 CORS(app)
 
-# --- CONFIGURACIÓN ---
+# --- CONFIGURACIÓN: VOLVEMOS AL 587 ---
 SMTP_SERVER = 'smtp.gmail.com'
-SMTP_PORT = 465
+SMTP_PORT = 587
 SENDER_EMAIL = os.environ.get('EMAIL_USER')
 SENDER_PASSWORD = os.environ.get('EMAIL_PASS', '').replace(' ', '')
 API_KEY_SECRET = os.environ.get('NOTIFICACIONES_KEY')
 
-# --- HACK IPv4 ---
+# --- HACK IPv4 (MANTENER SIEMPRE EN RENDER) ---
 _orig_create_connection = socket.create_connection
 
 def patched_create_connection(address, timeout=socket._GLOBAL_DEFAULT_TIMEOUT, source_address=None):
@@ -33,11 +33,11 @@ def patched_create_connection(address, timeout=socket._GLOBAL_DEFAULT_TIMEOUT, s
     return _orig_create_connection(address, timeout, source_address)
 
 socket.create_connection = patched_create_connection
-# -----------------
+# ----------------------------------------------
 
 def tarea_enviar_correo(destinatario, mensaje_texto):
     try:
-        print(f"🔄 [Background] Conectando a Gmail (465 SSL + IPv4)...", flush=True)
+        print(f"🔄 [Background] Conectando a Gmail (Puerto 587 + IPv4)...", flush=True)
         
         msg = MIMEMultipart()
         msg['From'] = f"TourFer Reservas <{SENDER_EMAIL}>"
@@ -45,26 +45,31 @@ def tarea_enviar_correo(destinatario, mensaje_texto):
         msg['Subject'] = "Confirmación de Reserva - TourFer"
         msg.attach(MIMEText(mensaje_texto, 'plain'))
 
-        # Usamos SMTP_SSL directo
-        server = smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT, timeout=60)
+        # 1. Conexión inicial sin SSL
+        server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=30)
+        server.set_debuglevel(0) # Cambiar a 1 si quieres ver logs detallados de protocolo
         
-        # Login
+        # 2. Negociación TLS (Encriptación)
+        server.ehlo()
+        server.starttls() 
+        server.ehlo()
+
+        # 3. Login
         server.login(SENDER_EMAIL, SENDER_PASSWORD)
         server.sendmail(SENDER_EMAIL, destinatario, msg.as_string())
         server.quit()
 
-        print(f"✅ [Background] CORREO ENVIADO A: {destinatario}", flush=True)
+        print(f"✅ [Background] CORREO ENVIADO EXITOSAMENTE a {destinatario}", flush=True)
 
     except Exception as e:
         print(f"❌ [Background] Error FATAL: {e}", flush=True)
 
 @app.route('/enviar-correo', methods=['POST'])
 def recibir_peticion():
-    print(f"📡 Recibida petición POST en /enviar-correo", flush=True) # Log de entrada
+    print(f"📡 Recibida petición POST", flush=True)
     
     api_key_recibida = request.headers.get('X-Notification-Key')
     if api_key_recibida != API_KEY_SECRET:
-        print(f"🚫 Acceso denegado: Key incorrecta", flush=True)
         return jsonify({"error": "Acceso denegado"}), 403
 
     data = request.get_json()
@@ -72,10 +77,8 @@ def recibir_peticion():
     mensaje_texto = data.get('mensaje')
 
     if not destinatario:
-        print("⚠️ Falta destinatario", flush=True)
         return jsonify({"error": "Faltan datos"}), 400
 
-    # Iniciar hilo
     hilo = threading.Thread(target=tarea_enviar_correo, args=(destinatario, mensaje_texto))
     hilo.start()
 
