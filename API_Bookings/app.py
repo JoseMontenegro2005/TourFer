@@ -71,7 +71,7 @@ def login():
 
     conn = get_db_connection(Config)
     cur = conn.cursor(cursorclass=DictCursor)
-    cur.execute("SELECT id, password, rol_id FROM usuarios WHERE email = %s", (email,))
+    cur.execute("SELECT id, nombre, password, rol_id FROM usuarios WHERE email = %s", (email,))
     usuario = cur.fetchone()
     cur.close()
     conn.close()
@@ -83,7 +83,10 @@ def login():
             identity=str(usuario['id']),
             additional_claims=rol
         )
-        return jsonify(access_token=access_token)
+        return jsonify({
+            "access_token": access_token,
+            "user_name": usuario['nombre'] 
+        })
     else:
         return jsonify({"error": "Credenciales inválidas"}), 401
 
