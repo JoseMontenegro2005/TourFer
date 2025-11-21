@@ -5,7 +5,7 @@
       <p>Descubre la auténtica Colombia con TourFer.</p>
     </header>
 
-    <!-- Estados de Carga y Error -->
+    <!-- Loading y Error -->
     <div v-if="isLoading" class="loading-state">
       <p>Cargando tours...</p>
     </div>
@@ -28,7 +28,7 @@
           <h3>{{ tour.nombre }}</h3>
           <p>{{ tour.descripcion ? tour.descripcion.substring(0, 100) + '...' : 'Sin descripción' }}</p>
           
-          <div style="margin-top: 1rem; display: flex; justify-content: space-between; font-size: 0.85rem; color: #666;">
+          <div class="tour-meta">
              <span>🕒 {{ tour.duracion_horas }} Horas</span>
              <span>👥 {{ tour.cupos_disponibles }} Cupos</span>
           </div>
@@ -42,28 +42,28 @@
       </div>
     </div>
 
-    <!-- ========================================= -->
     <!-- MODAL DE RESERVA -->
-    <!-- ========================================= -->
     <div v-if="showModal" class="modal-overlay" @click.self="cerrarModal">
       <div class="modal-content">
         <div class="modal-header">
           <h2>Reservar: {{ selectedTour?.nombre }}</h2>
           <button class="btn-close" @click="cerrarModal">×</button>
         </div>
+
+        <!-- WIDGET DE CLIMA -->
         <div v-if="weather" class="weather-widget" :class="weather.climaPrincipal">
           <div class="weather-icon">
             <img :src="`http://openweathermap.org/img/wn/${weather.icon}@2x.png`" alt="Clima">
           </div>
           <div class="weather-info">
             <span class="weather-temp">{{ weather.temp }}°C</span>
-            <span class="weather-desc">Clima actual en {{ selectedTour.destino }}: {{ weather.descripcion }}</span>
+            <span class="weather-desc">{{ weather.descripcion }} en {{ selectedTour.destino.split(',')[0] }}</span>
           </div>
         </div>
+
         <form @submit.prevent="enviarReserva" class="reserva-form">
           <div class="form-group">
             <label>Fecha de Reserva:</label>
-            <!-- Se aplica minDate aquí para bloquear fechas anteriores -->
             <input 
               type="date" 
               v-model="formReserva.fecha" 
@@ -122,22 +122,18 @@ export default {
       showModal: false,
       selectedTour: null,
       isSubmitting: false,
-      formReserva: {
-        fecha: '',
-        cantidad_personas: 1
-      },
-      weather: null, // Nueva variable para el clima
-      openWeatherKey: '608b9a33c6a5a8a5d9c5d037911517a2' // ¡Pega tu key de OpenWeather aquí!
+      formReserva: { fecha: '', personas: 1 },
+      
+      weather: null,
+      // Asegúrate de que esta variable coincida con tu .env.local
+      openWeatherKey: import.meta.env.VITE_OPENWEATHER_KEY 
     };
   },
 
   computed: {
-    // LÓGICA MODIFICADA PARA REGLA DE 15 DÍAS
     minDate() {
       const fechaMinima = new Date();
-      // Sumamos 15 días a la fecha actual
       fechaMinima.setDate(fechaMinima.getDate() + 15);
-      // Formateamos a YYYY-MM-DD para el input HTML
       return fechaMinima.toISOString().split('T')[0];
     }
   },
@@ -155,18 +151,16 @@ export default {
         this.isLoading = false;
       }
     },
+
     async obtenerClima(destino) {
-      this.weather = null; // Reiniciar
+      this.weather = null; 
       try {
-        // OpenWeather busca por nombre de ciudad. 
-        // Agregamos ',CO' para asegurar que busque en Colombia.
         let ciudad = destino;
         if (destino.includes(',')) {
-        ciudad = destino.split(',')[0].trim();
+          ciudad = destino.split(',')[0].trim();
         }
-        const apiKey = this.openWeatherKey;
         const query = `${encodeURIComponent(ciudad)},CO`; 
-        const url = `https://api.openweathermap.org/data/2.5/weather?q=${query}&appid=${apiKey}&units=metric&lang=es`;
+        const url = `https://api.openweathermap.org/data/2.5/weather?q=${query}&appid=${this.openWeatherKey}&units=metric&lang=es`;
         
         const response = await axios.get(url);
         const data = response.data;
@@ -177,11 +171,8 @@ export default {
           icon: data.weather[0].icon,
           climaPrincipal: data.weather[0].main.toLowerCase()
         };
-
       } catch (e) {
-        // Tip: Imprime el error completo para ver si es 404 (ciudad no encontrada) o 401 (API Key inválida)
-        console.warn("Error clima:", e.response?.data?.message || e.message);
-        // No mostramos alerta al usuario para no ser intrusivos, simplemente no sale el widget.
+        console.warn("Error clima:", e.message);
       }
     },
     
@@ -192,7 +183,7 @@ export default {
         return;
       }
       this.selectedTour = tour;
-      this.formReserva = { fecha: '', cantidad_personas: 1 };
+      this.formReserva = { fecha: '', personas: 1 };
       this.obtenerClima(tour.destino);
       this.showModal = true;
     },
@@ -208,11 +199,10 @@ export default {
         const datosReserva = {
           tour_id: this.selectedTour.id,
           fecha: this.formReserva.fecha,
-          cantidad_personas: this.formReserva.personas
+          cantidad_personas: this.formReserva.personas 
         };
         
-        const url = 'https://tourfer-reservas.onrender.com/reservas';
-        
+        const url = 'https://tourfer-reservas.onrender.com/reservar';
         await axios.post(url, datosReserva, this.authStore.getAuthHeaders());
 
         alert(`¡Reserva exitosa! Te hemos enviado un correo de confirmación.`);
@@ -236,7 +226,6 @@ export default {
 </script>
 
 <style scoped>
-/* --- TUS ESTILOS ORIGINALES SE MANTIENEN --- */
 .tours-container {
   max-width: 1400px;
   margin: 0 auto;
@@ -259,10 +248,14 @@ export default {
   margin-top: 0;
 }
 
+/* --- GRID RESPONSIVO MEJORADO --- */
 .tours-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  /* CAMBIO: Bajamos el mínimo a 280px para que quepan mejor en tablets pequeñas */
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 2rem; 
+  /* CAMBIO: Centrar las cards si sobran espacios */
+  justify-content: center;
 }
 
 .tour-card {
@@ -326,11 +319,12 @@ export default {
   margin: 0.5rem 0;
 }
 
-.tour-content p {
-  font-size: 0.95rem;
-  color: var(--text-light, #666);
-  line-height: 1.5;
-  margin: 0;
+.tour-meta {
+  margin-top: 1rem; 
+  display: flex; 
+  justify-content: space-between; 
+  font-size: 0.85rem; 
+  color: #666;
 }
 
 .tour-footer {
@@ -339,13 +333,10 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.9rem;
-  color: var(--text-muted, #888);
-  font-weight: 500;
 }
 
 .btn-comprar {
-  padding: 8px 16px;
+  padding: 10px 16px;
   background-color: var(--primary-color, #2c3e50);
   color: white;
   border: none;
@@ -355,17 +346,34 @@ export default {
   transition: background-color 0.3s;
   width: 100%;
 }
-.btn-comprar:hover {
-  background-color: var(--primary-dark, #1a252f);
+
+/* --- AJUSTES ESPECÍFICOS PARA MÓVIL --- */
+@media (max-width: 600px) {
+  .tours-container {
+    /* Reducimos el padding lateral para ganar espacio */
+    padding: 1rem; 
+  }
+
+  .tours-header h1 {
+    font-size: 1.8rem; /* Título más pequeño */
+  }
+
+  .tours-grid {
+    /* Forzamos 1 sola columna en móviles */
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .tour-card {
+    /* Aseguramos que no se salga del contenedor */
+    max-width: 100%; 
+  }
 }
 
-/* ESTILOS DEL MODAL */
+/* MODAL */
 .modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  top: 0; left: 0; width: 100%; height: 100%;
   background: rgba(0, 0, 0, 0.6);
   display: flex;
   justify-content: center;
@@ -376,181 +384,52 @@ export default {
 
 .modal-content {
   background: white;
-  padding: 2rem;
+  padding: 1.5rem; /* Menos padding en el modal */
   border-radius: 16px;
   width: 90%;
   max-width: 450px;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-  animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
-  max-height: 90vh; 
+  max-height: 90vh;
   overflow-y: auto;
-}
-
-@keyframes slideIn {
-  from { opacity: 0; transform: translateY(20px) scale(0.95); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
-  border-bottom: 2px solid #f0f0f0;
-  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 0.5rem;
 }
 
-.modal-header h2 {
-  margin: 0;
-  font-size: 1.4rem;
-  color: var(--text-color, #333);
-  font-weight: 700;
-}
+.modal-header h2 { font-size: 1.3rem; margin: 0; }
+.btn-close { background: none; border: none; font-size: 2rem; cursor: pointer; line-height: 1; }
 
-.btn-close {
-  background: none;
-  border: none;
-  font-size: 2rem;
-  line-height: 1;
-  cursor: pointer;
-  color: #999;
-  padding: 0 0.5rem;
-  transition: color 0.2s;
-}
-.btn-close:hover {
-  color: #333;
-}
-
-.form-group {
-  margin-bottom: 1.25rem;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 600;
-  color: var(--text-color, #333);
-  font-size: 0.95rem;
-}
-
-.form-group input {
-  width: 100%;
-  padding: 0.8rem 1rem;
-  border: 2px solid #eee;
-  border-radius: 8px;
-  font-size: 1rem;
-  transition: border-color 0.2s;
-  box-sizing: border-box;
-}
-
-.form-group input:focus {
-  border-color: var(--primary-color, #2c3e50);
-  outline: none;
-}
-
-.reserva-summary {
-  background: #f8f9fa;
-  padding: 1.25rem;
-  border-radius: 8px;
-  margin-bottom: 1.5rem;
-  border: 1px solid #eee;
-}
-
-.total-highlight {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 0.5rem;
-  padding-top: 0.5rem;
-  border-top: 1px dashed #ddd;
-  font-size: 1.2rem;
-  font-weight: 800;
-  color: var(--primary-color, #2c3e50);
-}
-
-.modal-actions {
-  display: flex;
-  gap: 1rem;
-  margin-top: 1.5rem;
-}
-
-.btn-primary {
-  flex: 2;
-  background: var(--primary-color, #2c3e50);
-  color: white;
-  border: none;
-  padding: 1rem;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 700;
-  font-size: 1rem;
-  transition: opacity 0.2s;
-}
-
-.btn-primary:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
-.btn-secondary {
-  flex: 1;
-  background: #f1f3f5;
-  color: #495057;
-  border: none;
-  padding: 1rem;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-}
-
-.btn-secondary:hover {
-  background: #e9ecef;
-}
-
-.loading-state, .error-message {
-  text-align: center;
-  padding: 2rem;
-  font-size: 1.2rem;
-  color: #666;
-}
-.error-message {
-  color: #e74c3c;
-}
+/* Widget Clima Compacto */
 .weather-widget {
   display: flex;
   align-items: center;
   background: #e3f2fd;
-  padding: 0.5rem 1rem; /* Menos padding vertical */
-  border-radius: 8px;   /* Bordes un poco menos redondeados para ahorrar espacio */
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
   margin-bottom: 1rem;
   border: 1px solid #bbdefb;
-  font-size: 0.9rem;    /* Texto un poco más pequeño */
-}
-
-/* Cambiar color según clima (opcional) */
-.weather-widget.clear { background: #fff9c4; border-color: #fff59d; } /* Soleado */
-.weather-widget.rain { background: #cfd8dc; border-color: #b0bec5; } /* Lluvia */
-
-.weather-icon img {
-  width: 40px;  /* Más pequeño (antes 50px) */
-  height: 40px;
-}
-
-.weather-info {
-  display: flex;
-  flex-direction: column;
-  margin-left: 10px;
-}
-
-.weather-temp {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: #333;
-}
-
-.weather-desc {
   font-size: 0.9rem;
-  color: #666;
-  text-transform: capitalize;
 }
+.weather-icon img { width: 40px; height: 40px; }
+.weather-info { margin-left: 10px; }
+.weather-temp { font-weight: bold; }
+.weather-desc { text-transform: capitalize; color: #555; }
+
+.form-group { margin-bottom: 1rem; }
+.form-group label { display: block; margin-bottom: 0.3rem; font-weight: 600; }
+.form-group input { width: 100%; padding: 0.8rem; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+
+.reserva-summary { background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }
+.total-highlight { display: flex; justify-content: space-between; font-weight: bold; margin-top: 0.5rem; color: #2c3e50; }
+
+.modal-actions { display: flex; gap: 1rem; margin-top: 1rem; }
+.btn-primary { flex: 2; background: var(--primary-color, #2c3e50); color: white; border: none; padding: 0.8rem; border-radius: 6px; cursor: pointer; font-weight: bold; }
+.btn-secondary { flex: 1; background: #f1f3f5; border: none; padding: 0.8rem; border-radius: 6px; cursor: pointer; }
 </style>
