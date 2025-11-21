@@ -1,65 +1,42 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+import requests
 import os
 import threading
-import socket
 
 app = Flask(__name__)
 CORS(app)
 
-# --- CONFIGURACIÓN: VOLVEMOS AL 587 ---
-SMTP_SERVER = 'smtp.gmail.com'
-SMTP_PORT = 587
-SENDER_EMAIL = os.environ.get('EMAIL_USER')
-SENDER_PASSWORD = os.environ.get('EMAIL_PASS', '').replace(' ', '')
+# CONFIGURACIÓN
+RESEND_API_KEY = os.environ.get('RESEND_API_KEY')
 API_KEY_SECRET = os.environ.get('NOTIFICACIONES_KEY')
-
-# --- HACK IPv4 (MANTENER SIEMPRE EN RENDER) ---
-_orig_create_connection = socket.create_connection
-
-def patched_create_connection(address, timeout=socket._GLOBAL_DEFAULT_TIMEOUT, source_address=None):
-    host, port = address
-    if host == SMTP_SERVER:
-        try:
-            info = socket.getaddrinfo(host, port, socket.AF_INET)
-            if info:
-                host = info[0][4][0]
-                address = (host, port)
-        except Exception:
-            pass
-    return _orig_create_connection(address, timeout, source_address)
-
-socket.create_connection = patched_create_connection
-# ----------------------------------------------
 
 def tarea_enviar_correo(destinatario, mensaje_texto):
     try:
-        print(f"🔄 [Background] Conectando a Gmail (Puerto 587 + IPv4)...", flush=True)
+        print(f"🔄 [Background] Enviando vía Resend API a {destinatario}...", flush=True)
         
-        msg = MIMEMultipart()
-        msg['From'] = f"TourFer Reservas <{SENDER_EMAIL}>"
-        msg['To'] = destinatario
-        msg['Subject'] = "Confirmación de Reserva - TourFer"
-        msg.attach(MIMEText(mensaje_texto, 'plain'))
-
-        # 1. Conexión inicial sin SSL
-        server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=30)
-        server.set_debuglevel(0) # Cambiar a 1 si quieres ver logs detallados de protocolo
+        # Configuración de la petición a Resend
+        url = "https://api.resend.com/emails"
+        headers = {
+            "Authorization": f"Bearer {RESEND_API_KEY}",
+            "Content-Type": "application/json"
+        }
         
-        # 2. Negociación TLS (Encriptación)
-        server.ehlo()
-        server.starttls() 
-        server.ehlo()
+        # NOTA: En el modo de prueba de Resend, solo puedes enviar correos 
+        # a la dirección con la que te registraste.
+        payload = {
+            "from": "TourFer <onboarding@resend.dev>", # Correo genérico permitido por Resend
+            "to": [destinatario],
+            "subject": "Confirmación de Reserva - TourFer",
+            "html": f"<p>{mensaje_texto}</p>" # Soporta HTML básico
+        }
 
-        # 3. Login
-        server.login(SENDER_EMAIL, SENDER_PASSWORD)
-        server.sendmail(SENDER_EMAIL, destinatario, msg.as_string())
-        server.quit()
+        response = requests.post(url, json=payload, headers=headers)
 
-        print(f"✅ [Background] CORREO ENVIADO EXITOSAMENTE a {destinatario}", flush=True)
+        if response.status_code == 200:
+            print(f"✅ [Background] CORREO ENVIADO (ID: {response.json().get('id')})", flush=True)
+        else:
+            print(f"❌ [Background] Error Resend: {response.status_code} - {response.text}", flush=True)
 
     except Exception as e:
         print(f"❌ [Background] Error FATAL: {e}", flush=True)
@@ -79,6 +56,7 @@ def recibir_peticion():
     if not destinatario:
         return jsonify({"error": "Faltan datos"}), 400
 
+    # Hilo en segundo plano (sigue siendo buena práctica)
     hilo = threading.Thread(target=tarea_enviar_correo, args=(destinatario, mensaje_texto))
     hilo.start()
 
