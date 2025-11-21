@@ -3,7 +3,7 @@ import requests
 from config import Config, get_catalogo_api_config
 from db import get_db_connection
 import MySQLdb
-from MySQLdb.cursors import DictCursor # Usamos el cursor de MySQL
+from MySQLdb.cursors import DictCursor
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity, get_jwt
 from functools import wraps
@@ -49,7 +49,7 @@ def register():
         cur.close()
         conn.close()
         return jsonify({"mensaje": "Usuario registrado exitosamente"}), 201
-    except MySQLdb.IntegrityError: # CORREGIDO: Usamos la excepción de MySQL
+    except MySQLdb.IntegrityError:
         conn.rollback()
         cur.close()
         conn.close()
@@ -70,7 +70,6 @@ def login():
         return jsonify({"error": "Faltan email o password"}), 400
 
     conn = get_db_connection(Config)
-    # CORREGIDO: Usamos DictCursor para MySQL
     cur = conn.cursor(cursorclass=DictCursor)
     cur.execute("SELECT id, password, rol_id FROM usuarios WHERE email = %s", (email,))
     usuario = cur.fetchone()
@@ -92,7 +91,6 @@ def login():
 @admin_required
 def get_all_users():
     conn = get_db_connection(Config)
-    # CORREGIDO
     cur = conn.cursor(cursorclass=DictCursor)
     cur.execute("SELECT id, nombre, email, rol_id FROM usuarios")
     usuarios = cur.fetchall()
@@ -131,11 +129,10 @@ def create_reserva():
     
     # 3. Insertar en BD
     conn = get_db_connection(Config)
-    cur = conn.cursor(cursorclass=DictCursor) # CORREGIDO
+    cur = conn.cursor(cursorclass=DictCursor)
     user_email = "sin_correo@tourfer.com"
     
     try:
-        # CORREGIDO: Quitamos RETURNING id porque MySQL no lo soporta
         cur.execute(
             """
             INSERT INTO reservas (tour_id, usuario_id, cantidad_personas, costo_total, estado) 
@@ -144,11 +141,8 @@ def create_reserva():
             (tour_id, current_user_id, cantidad_personas, costo_total, 'Confirmada') 
         )
         conn.commit()
-        
-        # CORREGIDO: Obtenemos el ID así
         reserva_id = cur.lastrowid
 
-        # Consultamos el email
         cur.execute("SELECT email FROM usuarios WHERE id = %s", (current_user_id,))
         usuario_data = cur.fetchone()
         if usuario_data:
@@ -173,18 +167,34 @@ def create_reserva():
     except requests.exceptions.RequestException as e:
         print(f"ADVERTENCIA: Reserva {reserva_id} creada, pero falló la actualización de cupos: {e}")
     
-    # 5. Notificaciones
+    # 5. Enviar Notificación (Con destino y timeout extendido)
     try:
-        notificaciones_url = 'https://tourfer-notificaciones.onrender.com/enviar-correo' # Asegúrate que sea HTTPS en producción
+        notificaciones_url = 'https://tourfer-notificaciones.onrender.com/enviar-correo'
         
         headers = {
             'Content-Type': 'application/json',
-            'X-Notification-Key': 'clave_segura_local_123' 
+            'X-Notification-Key': 'clave_segura_local_123' # Asegúrate que coincida con tu variable de entorno
         }
+        
+        # Obtenemos el destino del objeto tour_data que ya consultamos arriba
+        destino_tour = tour_data.get('destino', 'destino turístico')
+        nombre_tour = tour_data.get('nombre', 'Tour')
+
+        mensaje_personalizado = (
+            f"¡Hola! Tu reserva #{reserva_id} para el tour '{nombre_tour}' "
+            f"con destino a {destino_tour} para la fecha {fecha} ha sido confirmada.\n\n"
+            f"Detalles:\n"
+            f"- Personas: {cantidad_personas}\n"
+            f"- Total: ${costo_total:,.0f}\n\n"
+            f"¡Gracias por elegirnos!\n"
+            f"TourFer"
+        )
+
+        # Aumentamos el timeout a 15 segundos para evitar errores si el servicio está "dormido"
         requests.post(notificaciones_url, json={
             "email": user_email,
-            "mensaje": f"¡Hola! Tu reserva #{reserva_id} para el {fecha} ha sido confirmada."
-        }, headers=headers, timeout=10)
+            "mensaje": mensaje_personalizado
+        }, headers=headers, timeout=15) 
         
     except Exception as e:
         print(f"ADVERTENCIA: No se pudo enviar la notificación: {e}")
@@ -201,7 +211,6 @@ def create_reserva():
 def get_mis_reservas():
     current_user_id = get_jwt_identity()
     conn = get_db_connection(Config)
-    # CORREGIDO
     cur = conn.cursor(cursorclass=DictCursor)
     cur.execute("SELECT * FROM reservas WHERE usuario_id = %s", (current_user_id,))
     reservas = cur.fetchall()
@@ -209,7 +218,7 @@ def get_mis_reservas():
     conn.close()
     return jsonify(reservas)
 
-# --- RUTAS DE PROXY ADMIN (Sin cambios) ---
+# --- RUTAS PROXY ADMIN ---
 
 @app.route('/admin/tours', methods=['POST'])
 @admin_required
