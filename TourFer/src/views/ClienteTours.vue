@@ -202,7 +202,7 @@ export default {
           cantidad_personas: this.formReserva.personas 
         };
         
-        const url = 'https://tourfer-reservas.onrender.com/reservar';
+        const url = 'https://tourfer-reservas.onrender.com/reservas';
         await axios.post(url, datosReserva, this.authStore.getAuthHeaders());
 
         alert(`¡Reserva exitosa! Te hemos enviado un correo de confirmación.`);
