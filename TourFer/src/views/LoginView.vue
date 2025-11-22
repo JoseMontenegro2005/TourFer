@@ -43,8 +43,9 @@
       </div>
 
       <div class="form-footer">
+        <p>¿Olvidaste tu contraseña?</p>
         <a href="mailto:toufer2003@gmail.com?subject=Olvidé mi contraseña - TourFer">
-           <p>¿Olvidaste tu contraseña?</p>Contactar soporte
+        Contactar soporte
         </a>
       </div>
     </div>
