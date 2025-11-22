@@ -35,10 +35,16 @@
         <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">
           Ingresar
         </button>
+        
       </form>
       
       <div class="form-footer">
         <p>¿No tienes cuenta? <router-link to="/register">Regístrate</router-link></p>
+      </div>
+      <div class="help-link">
+        <a href="mailto:toufer2003@gmail.com?subject=Olvidé mi contraseña - TourFer">
+          ¿Olvidaste tu contraseña? Contactar soporte
+        </a>
       </div>
     </div>
   </div>
