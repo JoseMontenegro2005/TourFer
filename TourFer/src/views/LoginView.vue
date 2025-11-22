@@ -41,9 +41,10 @@
       <div class="form-footer">
         <p>¿No tienes cuenta? <router-link to="/register">Regístrate</router-link></p>
       </div>
-      <div class="help-link">
+
+      <div class="form-footer">
         <a href="mailto:toufer2003@gmail.com?subject=Olvidé mi contraseña - TourFer">
-          ¿Olvidaste tu contraseña? Contactar soporte
+           <p>¿Olvidaste tu contraseña?</p>Contactar soporte
         </a>
       </div>
     </div>
@@ -142,4 +143,20 @@ h1 {
 .form-footer a:hover {
   text-decoration: underline;
 }
+.form-footer {
+  margin-top: 1.5rem;
+  font-size: 0.9rem;
+}
+.form-footer p {
+  color: var(--text-muted);
+}
+.form-footer a {
+  color: var(--primary-color);
+  font-weight: 600;
+  text-decoration: none;
+}
+.form-footer a:hover {
+  text-decoration: underline;
+}
+
 </style>
