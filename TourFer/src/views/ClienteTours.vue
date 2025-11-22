@@ -50,14 +50,17 @@
           <button class="btn-close" @click="cerrarModal">×</button>
         </div>
 
-        <!-- WIDGET DE CLIMA -->
-        <div v-if="weather" class="weather-widget" :class="weather.climaPrincipal">
-          <div class="weather-icon">
-            <img :src="`http://openweathermap.org/img/wn/${weather.icon}@2x.png`" alt="Clima">
+        <!-- WIDGET DE CLIMA MEJORADO -->
+        <div v-if="weather" class="weather-widget">
+          <div class="weather-icon-container">
+            <!-- Usamos @4x para mejor resolución -->
+            <img :src="`https://openweathermap.org/img/wn/${weather.icon}@4x.png`" alt="Clima">
           </div>
           <div class="weather-info">
             <span class="weather-temp">{{ weather.temp }}°C</span>
-            <span class="weather-desc">{{ weather.descripcion }} en {{ selectedTour.destino.split(',')[0] }}</span>
+            <span class="weather-desc">
+              {{ weather.descripcion }} en {{ selectedTour.destino.split(',')[0] }}
+            </span>
           </div>
         </div>
 
@@ -118,14 +121,11 @@ export default {
       isLoading: true,
       error: null,
       authStore: useAuthStore(),
-      
       showModal: false,
       selectedTour: null,
       isSubmitting: false,
       formReserva: { fecha: '', personas: 1 },
-      
       weather: null,
-      // Asegúrate de que esta variable coincida con tu .env.local
       openWeatherKey: import.meta.env.VITE_OPENWEATHER_KEY 
     };
   },
@@ -202,7 +202,7 @@ export default {
           cantidad_personas: this.formReserva.personas 
         };
         
-        const url = 'https://tourfer-reservas.onrender.com/reservas';
+        const url = 'https://tourfer-reservas.onrender.com/reservar';
         await axios.post(url, datosReserva, this.authStore.getAuthHeaders());
 
         alert(`¡Reserva exitosa! Te hemos enviado un correo de confirmación.`);
@@ -226,35 +226,21 @@ export default {
 </script>
 
 <style scoped>
+/* --- ESTILOS GENERALES IGUALES --- */
 .tours-container {
   max-width: 1400px;
   margin: 0 auto;
   padding: 2rem;
 }
 
-.tours-header {
-  text-align: center;
-  margin-bottom: 2.5rem;
-}
-.tours-header h1 {
-  font-size: 2.5rem;
-  font-weight: 800;
-  color: var(--text-color, #333);
-  margin-bottom: 0.5rem;
-}
-.tours-header p {
-  font-size: 1.25rem;
-  color: var(--text-light, #666);
-  margin-top: 0;
-}
+.tours-header { text-align: center; margin-bottom: 2.5rem; }
+.tours-header h1 { font-size: 2.5rem; font-weight: 800; color: var(--text-color, #333); margin-bottom: 0.5rem; }
+.tours-header p { font-size: 1.25rem; color: var(--text-light, #666); margin-top: 0; }
 
-/* --- GRID RESPONSIVO MEJORADO --- */
 .tours-grid {
   display: grid;
-  /* CAMBIO: Bajamos el mínimo a 280px para que quepan mejor en tablets pequeñas */
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 2rem; 
-  /* CAMBIO: Centrar las cards si sobran espacios */
   justify-content: center;
 }
 
@@ -268,160 +254,101 @@ export default {
   transition: all 0.3s ease;
   border: 1px solid #eee;
 }
+.tour-card:hover { transform: translateY(-8px); box-shadow: var(--shadow-large, 0 10px 15px rgba(0,0,0,0.1)); }
 
-.tour-card:hover {
-  transform: translateY(-8px);
-  box-shadow: var(--shadow-large, 0 10px 15px rgba(0,0,0,0.1));
-}
-
-.tour-image {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-}
-
-.tour-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover; 
-}
-
+.tour-image { position: relative; width: 100%; aspect-ratio: 16 / 9; }
+.tour-image img { width: 100%; height: 100%; object-fit: cover; }
 .tour-price {
-  position: absolute;
-  bottom: 1rem;
-  right: 1rem;
-  background-color: rgba(8, 108, 20, 0.9);
-  color: white;
-  padding: 8px 12px;
-  border-radius: var(--border-radius-medium, 8px);
-  font-weight: 700;
-  font-size: 1.1rem;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  position: absolute; bottom: 1rem; right: 1rem;
+  background-color: rgba(8, 108, 20, 0.9); color: white;
+  padding: 8px 12px; border-radius: 8px; font-weight: 700; font-size: 1.1rem;
 }
 
-.tour-content {
-  padding: 1.5rem;
-  flex-grow: 1; 
-}
+.tour-content { padding: 1.5rem; flex-grow: 1; }
+.tour-destination { font-size: 0.9rem; font-weight: 600; color: var(--primary-color, #2c3e50); text-transform: uppercase; letter-spacing: 0.5px; }
+.tour-content h3 { font-size: 1.3rem; font-weight: 700; color: var(--text-color, #333); margin: 0.5rem 0; }
+.tour-meta { margin-top: 1rem; display: flex; justify-content: space-between; font-size: 0.85rem; color: #666; }
 
-.tour-destination {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--primary-color, #2c3e50);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
+.tour-footer { padding: 1rem 1.5rem; border-top: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+.btn-comprar { padding: 10px 16px; background-color: var(--primary-color, #2c3e50); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; transition: background-color 0.3s; width: 100%; }
 
-.tour-content h3 {
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: var(--text-color, #333);
-  margin: 0.5rem 0;
-}
-
-.tour-meta {
-  margin-top: 1rem; 
-  display: flex; 
-  justify-content: space-between; 
-  font-size: 0.85rem; 
-  color: #666;
-}
-
-.tour-footer {
-  padding: 1rem 1.5rem;
-  border-top: 1px solid var(--border-color, #eee);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.btn-comprar {
-  padding: 10px 16px;
-  background-color: var(--primary-color, #2c3e50);
-  color: white;
-  border: none;
-  border-radius: var(--border-radius-medium, 6px);
-  cursor: pointer;
-  font-weight: 600;
-  transition: background-color 0.3s;
-  width: 100%;
-}
-
-/* --- AJUSTES ESPECÍFICOS PARA MÓVIL --- */
 @media (max-width: 600px) {
-  .tours-container {
-    /* Reducimos el padding lateral para ganar espacio */
-    padding: 1rem; 
-  }
-
-  .tours-header h1 {
-    font-size: 1.8rem; /* Título más pequeño */
-  }
-
-  .tours-grid {
-    /* Forzamos 1 sola columna en móviles */
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-  }
-  
-  .tour-card {
-    /* Aseguramos que no se salga del contenedor */
-    max-width: 100%; 
-  }
+  .tours-container { padding: 1rem; }
+  .tours-header h1 { font-size: 1.8rem; }
+  .tours-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+  .tour-card { max-width: 100%; }
 }
 
 /* MODAL */
 .modal-overlay {
-  position: fixed;
-  top: 0; left: 0; width: 100%; height: 100%;
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
   background: rgba(0, 0, 0, 0.6);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
+  display: flex; justify-content: center; align-items: center; z-index: 9999;
   backdrop-filter: blur(3px);
 }
-
 .modal-content {
-  background: white;
-  padding: 1.5rem; /* Menos padding en el modal */
-  border-radius: 16px;
-  width: 90%;
-  max-width: 450px;
+  background: white; padding: 1.5rem; border-radius: 16px;
+  width: 90%; max-width: 450px;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-  position: relative;
-  max-height: 90vh;
-  overflow-y: auto;
+  position: relative; max-height: 90vh; overflow-y: auto;
 }
-
 .modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 0.5rem;
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 1rem; border-bottom: 1px solid #eee; padding-bottom: 0.5rem;
 }
-
 .modal-header h2 { font-size: 1.3rem; margin: 0; }
 .btn-close { background: none; border: none; font-size: 2rem; cursor: pointer; line-height: 1; }
 
-/* Widget Clima Compacto */
+/* --- WIDGET CLIMA CORREGIDO --- */
 .weather-widget {
   display: flex;
   align-items: center;
-  background: #e3f2fd;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  margin-bottom: 1rem;
+  background: #e3f2fd; /* Azul claro */
+  padding: 1rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
   border: 1px solid #bbdefb;
-  font-size: 0.9rem;
+  gap: 1rem; /* Espacio entre icono y texto */
 }
-.weather-icon img { width: 40px; height: 40px; }
-.weather-info { margin-left: 10px; }
-.weather-temp { font-weight: bold; }
-.weather-desc { text-transform: capitalize; color: #555; }
 
+.weather-icon-container {
+  background: white; /* Fondo blanco para que resalte el icono */
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.weather-icon-container img {
+  width: 50px;
+  height: 50px;
+}
+
+.weather-info {
+  display: flex;
+  flex-direction: column; /* Texto uno debajo del otro */
+  justify-content: center;
+}
+
+.weather-temp {
+  font-size: 1.8rem; /* Temperatura GRANDE */
+  font-weight: 800;
+  color: #2c3e50;
+  line-height: 1;
+  margin-bottom: 4px; /* Separación del texto de abajo */
+}
+
+.weather-desc {
+  font-size: 0.9rem;
+  color: #555;
+  text-transform: capitalize;
+  line-height: 1.2;
+}
+
+/* FORMULARIO */
 .form-group { margin-bottom: 1rem; }
 .form-group label { display: block; margin-bottom: 0.3rem; font-weight: 600; }
 .form-group input { width: 100%; padding: 0.8rem; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
@@ -433,3 +360,5 @@ export default {
 .btn-primary { flex: 2; background: var(--primary-color, #2c3e50); color: white; border: none; padding: 0.8rem; border-radius: 6px; cursor: pointer; font-weight: bold; }
 .btn-secondary { flex: 1; background: #f1f3f5; border: none; padding: 0.8rem; border-radius: 6px; cursor: pointer; }
 </style>
+
+
