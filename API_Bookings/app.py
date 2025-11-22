@@ -184,7 +184,7 @@ def create_reserva():
         nombre_tour = tour_data.get('nombre', 'Tour')
 
         mensaje_personalizado = (
-            f"¡Hola! Tu reserva #{reserva_id} para el tour '{nombre_tour}' "
+            f"¡Hola! La reserva #{reserva_id} para el tour '{nombre_tour}' "
             f"con destino a {destino_tour} para la fecha {fecha} ha sido confirmada.\n\n"
             f"Detalles:\n"
             f"- Personas: {cantidad_personas}\n"

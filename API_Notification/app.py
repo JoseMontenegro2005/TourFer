@@ -9,8 +9,17 @@ CORS(app)
 
 # CONFIGURACIÓN SENDGRID
 SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY')
-FROM_EMAIL = os.environ.get('FROM_EMAIL') # Tu correo verificado en SendGrid
+FROM_EMAIL = os.environ.get('FROM_EMAIL')
 API_KEY_SECRET = os.environ.get('NOTIFICACIONES_KEY')
+
+# --- NUEVO: RUTA DESPERTADOR (Health Check) ---
+@app.route('/', methods=['GET'])
+def health_check():
+    """
+    Ruta ligera para despertar el servicio sin realizar acciones.
+    """
+    return jsonify({"estado": "activo", "servicio": "Notificaciones TourFer"}), 200
+# ----------------------------------------------
 
 def tarea_enviar_correo(destinatario, mensaje_texto):
     try:
@@ -23,7 +32,6 @@ def tarea_enviar_correo(destinatario, mensaje_texto):
             "Content-Type": "application/json"
         }
         
-        # Estructura JSON específica de SendGrid
         payload = {
             "personalizations": [
                 {
@@ -42,7 +50,6 @@ def tarea_enviar_correo(destinatario, mensaje_texto):
 
         response = requests.post(url, json=payload, headers=headers)
 
-        # SendGrid devuelve 202 Accepted si todo salió bien
         if response.status_code == 202:
             print(f"✅ [Background] CORREO ENVIADO EXITOSAMENTE", flush=True)
         else:
