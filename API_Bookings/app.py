@@ -8,6 +8,7 @@ from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity, get_jwt
 from functools import wraps
 from flask_cors import CORS
+import threading
 
 app = Flask(__name__)
 CORS(app)
@@ -17,6 +18,23 @@ app.config.from_object(Config)
 catalogo_api_config = get_catalogo_api_config()
 bcrypt = Bcrypt(app)
 jwt = JWTManager(app)
+def wake_up_all_services():
+    try:
+        url_notif = 'https://tourfer-notificaciones.onrender.com/'
+        print(f"⏰ [Keep-Alive] Despertando Notificaciones...", flush=True)
+        requests.get(url_notif, timeout=3)
+    except:
+        pass #
+
+    try:
+        url_catalogo = 'https://tourfer-catalogo.onrender.com/' 
+        
+        print(f"⏰ [Keep-Alive] Despertando Catálogo...", flush=True)
+        requests.get(url_catalogo, timeout=3)
+    except Exception as e:
+        print(f"⚠️ [Keep-Alive] No se pudo despertar Catálogo: {e}", flush=True)
+
+threading.Thread(target=wake_up_all_services).start()
 
 def admin_required(fn):
     @wraps(fn)
