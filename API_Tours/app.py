@@ -6,6 +6,10 @@ import MySQLdb.cursors # <--- CAMBIO: Necesario para recibir diccionarios
 
 app = Flask(__name__)
 
+@app.route('/', methods=['GET'])
+def health_check():
+    return jsonify({"estado": "activo", "servicio": "Catálogo Tours"}), 200
+
 def require_api_key(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
